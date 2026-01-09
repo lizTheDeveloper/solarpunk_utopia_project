@@ -210,6 +210,11 @@ export interface DatabaseSchema {
   emergencyAlerts: Record<string, EmergencyAlert>;
   bulletinPosts: Record<string, BulletinPost>;
   communityEvents: Record<string, CommunityEvent>;
+  contributions: Record<string, ContributionRecord>;
+  gratitude: Record<string, GratitudeExpression>;
+  randomKindness: Record<string, RandomKindness>;
+  burnoutAssessments: Record<string, BurnoutAssessment>;
+  participationVitality: Record<string, ParticipationVitality>;
 }
 
 /**
@@ -571,4 +576,126 @@ export interface EmergencyAlert {
     eta?: number; // Estimated time of arrival in minutes
     status: 'on-way' | 'contacted' | 'arrived' | 'resolved';
   }>;
+}
+
+/**
+ * Community Vitality Tracking
+ * REQ-TIME-019 to REQ-TIME-022: Community vitality, gratitude, and burnout prevention
+ *
+ * CRITICAL: This is NOT debt tracking! This is about celebration, care, and wellbeing.
+ * We track abundance and vitality, NOT reciprocity or obligation.
+ */
+
+/**
+ * Contribution Record - tracks a contribution someone made to the community
+ * REQ-TIME-019: Participation Encouragement
+ * REQ-TIME-002: Abundance Tracking Over Debt
+ *
+ * This tracks what people GIVE to build a picture of community vitality,
+ * NOT to enforce reciprocity or create debt relationships.
+ */
+export interface ContributionRecord {
+  id: string;
+  userId: string;
+  contributionType: 'time-offer' | 'skill-share' | 'resource-share' | 'emotional-support' | 'care' | 'random-kindness' | 'other';
+  description: string;
+  skillsUsed?: string[]; // Skills demonstrated/shared
+  timeInvested?: number; // Minutes (optional, not for accounting!)
+  impactDescription?: string; // How this helped the community
+  recipientIds?: string[]; // Who benefited (optional)
+  communityGroupId?: string;
+  celebratedBy?: string[]; // Who expressed gratitude
+  createdAt: number;
+  visibility: 'private' | 'community' | 'public'; // Privacy control
+}
+
+/**
+ * Gratitude Expression - someone expressing thanks and appreciation
+ * REQ-TIME-022: Recognition Without Hierarchy
+ * REQ-TIME-018: Experience Sharing
+ *
+ * Building connection through gratitude, NOT creating obligation
+ */
+export interface GratitudeExpression {
+  id: string;
+  fromUserId: string;
+  toUserId: string;
+  message: string;
+  relatedContributionId?: string; // Optional link to specific contribution
+  relatedEventId?: string; // Optional link to economic event
+  tags?: string[]; // e.g., "kindness", "support", "joy"
+  isPublic: boolean; // Can this appear on the gratitude wall?
+  createdAt: number;
+}
+
+/**
+ * Random Act of Kindness - spontaneous, untracked giving
+ * REQ-TIME-001: Gift-Based Time Sharing
+ *
+ * Celebrating generosity without expectation of return
+ */
+export interface RandomKindness {
+  id: string;
+  performedBy?: string; // Optional - can be anonymous!
+  description: string;
+  category?: 'help' | 'gift' | 'care' | 'repair' | 'create' | 'teach' | 'other';
+  photos?: string[];
+  reactions: Array<{
+    userId: string;
+    emoji: string; // e.g., "❤️", "🌻", "✨"
+    timestamp: number;
+  }>;
+  createdAt: number;
+  isAnonymous: boolean;
+}
+
+/**
+ * Burnout Assessment - tracking wellbeing, NOT productivity
+ * REQ-TIME-021: Care and Burnout Prevention
+ *
+ * Gentle check-ins to prevent overcommitment and ensure sustainable participation
+ */
+export interface BurnoutAssessment {
+  id: string;
+  userId: string;
+  energyLevel: 1 | 2 | 3 | 4 | 5; // 1 = depleted, 5 = energized
+  recentCommitmentCount: number; // How many things they signed up for recently
+  consecutiveActiveDays: number; // Days in a row with activity
+  lastRestDay?: number; // When they last took a break
+  selfAssessment?: {
+    feelingOverwhelmed: boolean;
+    enjoyingParticipation: boolean;
+    needingBreak: boolean;
+    notes?: string;
+  };
+  systemSuggestion?: string; // Gentle encouragement (e.g., "Consider taking tomorrow off!")
+  acknowledged: boolean;
+  createdAt: number;
+}
+
+/**
+ * Participation Vitality - community-level health metrics
+ * REQ-TIME-002: Abundance Tracking Over Debt
+ * REQ-TIME-020: Skill Gap Identification
+ *
+ * Track what the community has (abundance) and needs (gaps), NOT individual balances
+ */
+export interface ParticipationVitality {
+  id: string;
+  communityGroupId?: string;
+  period: {
+    startDate: number;
+    endDate: number;
+  };
+  metrics: {
+    activeContributors: number; // How many people contributed
+    skillsOffered: string[]; // What skills are available
+    skillsNeeded: string[]; // What skills are scarce
+    unmetNeeds: number; // How many needs went unfulfilled
+    gratitudeExpressed: number; // How much appreciation is flowing
+    averageEnergyLevel: number; // Community wellbeing
+    peopleResting: number; // How many taking healthy breaks
+  };
+  insights: string[]; // Human-readable insights (e.g., "Need more gardeners")
+  generatedAt: number;
 }
