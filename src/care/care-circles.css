@@ -1,0 +1,545 @@
+/**
+ * Care Circles Styles
+ *
+ * Solarpunk-themed styling for care circle UI
+ */
+
+.care-circles-view {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.care-circles-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.care-circles-header h1 {
+  font-size: 2.5rem;
+  color: #2d5016;
+  margin-bottom: 0.5rem;
+}
+
+.care-circles-subtitle {
+  font-size: 1.1rem;
+  color: #5a7a3a;
+  margin: 0;
+}
+
+/* Empty State */
+.care-circles-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.empty-state {
+  text-align: center;
+  max-width: 400px;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state h2 {
+  color: #2d5016;
+  margin-bottom: 1rem;
+}
+
+.empty-state p {
+  color: #5a7a3a;
+  margin-bottom: 2rem;
+}
+
+/* Sections */
+.care-circles-section {
+  margin-bottom: 3rem;
+}
+
+.care-circles-section h2 {
+  color: #2d5016;
+  margin-bottom: 0.5rem;
+}
+
+.section-description {
+  color: #5a7a3a;
+  margin-bottom: 1.5rem;
+}
+
+/* Care Circle Cards */
+.care-circles-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.care-circle-card {
+  background: white;
+  border: 2px solid #b8d99b;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.care-circle-card:hover {
+  border-color: #7ab547;
+  box-shadow: 0 4px 12px rgba(122, 181, 71, 0.2);
+  transform: translateY(-2px);
+}
+
+.care-circle-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.care-circle-card-header h3 {
+  margin: 0;
+  color: #2d5016;
+  font-size: 1.3rem;
+}
+
+.care-circle-role-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.care-circle-role-badge.recipient {
+  background: #fff9e6;
+  color: #b8860b;
+}
+
+.care-circle-role-badge.member {
+  background: #e6f4ea;
+  color: #2d7a3a;
+}
+
+.care-circle-description {
+  color: #5a7a3a;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+/* Stats */
+.care-circle-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8fdf5;
+  border-radius: 8px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #2d5016;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #5a7a3a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Actions */
+.care-circle-actions {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+/* Modal */
+.care-circle-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 2px solid #e8f5e1;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #2d5016;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #5a7a3a;
+  cursor: pointer;
+  padding: 0.5rem;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #2d5016;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 2px solid #e8f5e1;
+}
+
+/* Care Circle Details */
+.care-circle-details .care-circle-section {
+  margin-bottom: 2rem;
+}
+
+.care-circle-details .care-circle-section:last-child {
+  margin-bottom: 0;
+}
+
+.care-circle-details h3 {
+  color: #2d5016;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+/* Members List */
+.care-members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.care-member {
+  background: #f8fdf5;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 3px solid #7ab547;
+}
+
+.member-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.member-id {
+  font-weight: 500;
+  color: #2d5016;
+}
+
+.member-role {
+  color: #5a7a3a;
+  font-style: italic;
+}
+
+.member-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill-tag {
+  background: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: #2d5016;
+  border: 1px solid #b8d99b;
+}
+
+/* Needs List */
+.care-needs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.care-need-item {
+  background: #f8fdf5;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 3px solid #b8d99b;
+}
+
+.care-need-item.met {
+  opacity: 0.7;
+  border-left-color: #7ab547;
+}
+
+.care-need-item.unmet {
+  border-left-color: #f4a261;
+}
+
+.need-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.need-type {
+  font-weight: 500;
+  color: #2d5016;
+  text-transform: capitalize;
+}
+
+.need-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.need-status.met {
+  background: #e6f4ea;
+  color: #2d7a3a;
+}
+
+.need-status.unmet {
+  background: #fff4e6;
+  color: #d97706;
+}
+
+.need-description {
+  color: #5a7a3a;
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.need-frequency {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: white;
+  border: 1px solid #b8d99b;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: #5a7a3a;
+  margin-top: 0.5rem;
+}
+
+.need-assigned {
+  color: #5a7a3a;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+/* Activities List */
+.care-activities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.care-activity-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8fdf5;
+  border-radius: 8px;
+}
+
+.activity-icon {
+  font-size: 1.5rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.activity-details {
+  flex: 1;
+}
+
+.activity-type {
+  font-weight: 500;
+  color: #2d5016;
+  text-transform: capitalize;
+  margin-bottom: 0.25rem;
+}
+
+.activity-description {
+  color: #5a7a3a;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.activity-time {
+  color: #8a9a7a;
+  font-size: 0.85rem;
+}
+
+/* Forms */
+.care-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: #2d5016;
+  font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group textarea,
+.form-group select {
+  padding: 0.75rem;
+  border: 2px solid #b8d99b;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #7ab547;
+}
+
+.form-group input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+/* Buttons */
+.btn-primary,
+.btn-secondary,
+.btn-small {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #7ab547;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #68a035;
+}
+
+.btn-secondary {
+  background: white;
+  color: #2d5016;
+  border: 2px solid #b8d99b;
+}
+
+.btn-secondary:hover {
+  background: #f8fdf5;
+  border-color: #7ab547;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  background: #7ab547;
+  color: white;
+}
+
+.btn-small:hover {
+  background: #68a035;
+}
+
+.empty-message {
+  color: #8a9a7a;
+  font-style: italic;
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .care-circles-view {
+    padding: 1rem;
+  }
+
+  .care-circles-header h1 {
+    font-size: 2rem;
+  }
+
+  .care-circles-list {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 1rem;
+  }
+}

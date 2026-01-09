@@ -16,7 +16,7 @@
   'use strict';
 
   const DB_NAME = 'solarpunk-db';
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
 
   /**
    * Object stores (tables)
@@ -27,6 +27,9 @@
     OFFERS: 'offers',             // Time, skills, help offered
     EVENTS: 'events',             // Community events
     MEMBERS: 'members',           // Community members
+    COMMUNITIES: 'communities',   // Community groups and communes
+    CARE_CIRCLES: 'care-circles', // Care circles for vulnerable members
+    CHECK_INS: 'check-ins',       // Check-in records
     SYNC_QUEUE: 'sync-queue',     // Operations to sync
     METADATA: 'metadata'          // System metadata
   };
@@ -124,6 +127,39 @@
               keyPath: 'id'
             });
             membersStore.createIndex('timestamp', 'timestamp', { unique: false });
+          }
+
+          // Communities (groups and communes)
+          if (!db.objectStoreNames.contains(STORES.COMMUNITIES)) {
+            const communitiesStore = db.createObjectStore(STORES.COMMUNITIES, {
+              keyPath: 'id'
+            });
+            communitiesStore.createIndex('name', 'name', { unique: false });
+            communitiesStore.createIndex('status', 'status', { unique: false });
+            communitiesStore.createIndex('visibility', 'visibility', { unique: false });
+            communitiesStore.createIndex('membershipModel', 'membership.model', { unique: false });
+            communitiesStore.createIndex('timestamp', 'createdAt', { unique: false });
+            communitiesStore.createIndex('lastModified', 'lastModified', { unique: false });
+          }
+
+          // Care Circles
+          if (!db.objectStoreNames.contains(STORES.CARE_CIRCLES)) {
+            const careCirclesStore = db.createObjectStore(STORES.CARE_CIRCLES, {
+              keyPath: 'id'
+            });
+            careCirclesStore.createIndex('recipientId', 'recipientId', { unique: false });
+            careCirclesStore.createIndex('status', 'status', { unique: false });
+            careCirclesStore.createIndex('timestamp', 'timestamp', { unique: false });
+          }
+
+          // Check-ins
+          if (!db.objectStoreNames.contains(STORES.CHECK_INS)) {
+            const checkInsStore = db.createObjectStore(STORES.CHECK_INS, {
+              keyPath: 'id'
+            });
+            checkInsStore.createIndex('careCircleId', 'careCircleId', { unique: false });
+            checkInsStore.createIndex('timestamp', 'timestamp', { unique: false });
+            checkInsStore.createIndex('status', 'status', { unique: false });
           }
 
           // Sync queue for offline operations
@@ -596,6 +632,209 @@
 
       async delete(id) {
         return await window.SolarpunkDB.db.delete(STORES.OFFERS, id);
+      }
+    },
+
+    /**
+     * Care Circles API (coordinated care for vulnerable members)
+     * Implements REQ-CARE-001: Care circle coordination
+     */
+    careCircles: {
+      async create(careCircle) {
+        careCircle.status = careCircle.status || 'active';
+        careCircle.timestamp = Date.now();
+        careCircle.members = careCircle.members || [];
+        careCircle.preferences = careCircle.preferences || {};
+        careCircle.schedule = careCircle.schedule || [];
+        return await window.SolarpunkDB.db.put(STORES.CARE_CIRCLES, careCircle);
+      },
+
+      async get(id) {
+        return await window.SolarpunkDB.db.get(STORES.CARE_CIRCLES, id);
+      },
+
+      async getAll(options) {
+        return await window.SolarpunkDB.db.getAll(STORES.CARE_CIRCLES, {
+          sortBy: 'timestamp',
+          sortOrder: 'desc',
+          ...options
+        });
+      },
+
+      async getByRecipient(recipientId) {
+        return await window.SolarpunkDB.db.query(STORES.CARE_CIRCLES,
+          circle => circle.recipientId === recipientId && circle.status === 'active');
+      },
+
+      async update(id, updates) {
+        const circle = await this.get(id);
+        if (!circle) throw new Error('Care circle not found');
+        Object.assign(circle, updates);
+        return await window.SolarpunkDB.db.put(STORES.CARE_CIRCLES, circle);
+      },
+
+      async addMember(circleId, memberId, role) {
+        const circle = await this.get(circleId);
+        if (!circle) throw new Error('Care circle not found');
+
+        if (!circle.members.find(m => m.id === memberId)) {
+          circle.members.push({
+            id: memberId,
+            role: role || 'supporter',
+            joinedAt: Date.now()
+          });
+          return await window.SolarpunkDB.db.put(STORES.CARE_CIRCLES, circle);
+        }
+        return circle;
+      },
+
+      async removeMember(circleId, memberId) {
+        const circle = await this.get(circleId);
+        if (!circle) throw new Error('Care circle not found');
+
+        circle.members = circle.members.filter(m => m.id !== memberId);
+        return await window.SolarpunkDB.db.put(STORES.CARE_CIRCLES, circle);
+      },
+
+      async addScheduledTask(circleId, task) {
+        const circle = await this.get(circleId);
+        if (!circle) throw new Error('Care circle not found');
+
+        task.id = window.SolarpunkDB.db.generateId('task');
+        task.createdAt = Date.now();
+        task.status = task.status || 'scheduled';
+        circle.schedule.push(task);
+
+        return await window.SolarpunkDB.db.put(STORES.CARE_CIRCLES, circle);
+      },
+
+      async updateTaskStatus(circleId, taskId, status) {
+        const circle = await this.get(circleId);
+        if (!circle) throw new Error('Care circle not found');
+
+        const task = circle.schedule.find(t => t.id === taskId);
+        if (task) {
+          task.status = status;
+          task.updatedAt = Date.now();
+        }
+
+        return await window.SolarpunkDB.db.put(STORES.CARE_CIRCLES, circle);
+      },
+
+      async delete(id) {
+        return await window.SolarpunkDB.db.delete(STORES.CARE_CIRCLES, id);
+      }
+    },
+
+    /**
+     * Check-ins API (wellness check-ins for care circles)
+     */
+    checkIns: {
+      async create(checkIn) {
+        checkIn.timestamp = Date.now();
+        checkIn.status = checkIn.status || 'okay';
+        return await window.SolarpunkDB.db.put(STORES.CHECK_INS, checkIn);
+      },
+
+      async get(id) {
+        return await window.SolarpunkDB.db.get(STORES.CHECK_INS, id);
+      },
+
+      async getAll(options) {
+        return await window.SolarpunkDB.db.getAll(STORES.CHECK_INS, {
+          sortBy: 'timestamp',
+          sortOrder: 'desc',
+          ...options
+        });
+      },
+
+      async getByCareCircle(careCircleId, options = {}) {
+        const allCheckIns = await window.SolarpunkDB.db.query(STORES.CHECK_INS,
+          checkIn => checkIn.careCircleId === careCircleId);
+
+        // Sort by timestamp descending
+        allCheckIns.sort((a, b) => b.timestamp - a.timestamp);
+
+        // Apply limit if specified
+        if (options.limit) {
+          return allCheckIns.slice(0, options.limit);
+        }
+
+        return allCheckIns;
+      },
+
+      async getMissedCheckIns(careCircleId, expectedIntervalHours = 24) {
+        const circle = await window.SolarpunkDB.careCircles.get(careCircleId);
+        if (!circle) return [];
+
+        const recentCheckIns = await this.getByCareCircle(careCircleId, { limit: 1 });
+        const lastCheckIn = recentCheckIns[0];
+
+        const now = Date.now();
+        const expectedInterval = expectedIntervalHours * 60 * 60 * 1000;
+
+        if (!lastCheckIn || (now - lastCheckIn.timestamp) > expectedInterval) {
+          return [{
+            careCircleId,
+            recipientId: circle.recipientId,
+            recipientName: circle.recipientName,
+            lastCheckIn: lastCheckIn ? lastCheckIn.timestamp : null,
+            hoursOverdue: lastCheckIn
+              ? Math.floor((now - lastCheckIn.timestamp) / (60 * 60 * 1000))
+              : null
+          }];
+        }
+
+        return [];
+      }
+    },
+
+    /**
+     * Communities API (community groups and communes)
+     * Implements REQ-GOV-001: Community Groups and Communes
+     */
+    communities: {
+      async create(community) {
+        community.createdAt = community.createdAt || Date.now();
+        community.lastModified = Date.now();
+        community.status = community.status || 'active';
+        community.visibility = community.visibility || 'public';
+        return await window.SolarpunkDB.db.put(STORES.COMMUNITIES, community);
+      },
+
+      async get(id) {
+        return await window.SolarpunkDB.db.get(STORES.COMMUNITIES, id);
+      },
+
+      async getAll(options) {
+        return await window.SolarpunkDB.db.getAll(STORES.COMMUNITIES, {
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+          ...options
+        });
+      },
+
+      async update(community) {
+        community.lastModified = Date.now();
+        return await window.SolarpunkDB.db.put(STORES.COMMUNITIES, community);
+      },
+
+      async delete(id) {
+        return await window.SolarpunkDB.db.delete(STORES.COMMUNITIES, id);
+      },
+
+      async getPublic() {
+        return await window.SolarpunkDB.db.query(STORES.COMMUNITIES,
+          c => c.visibility === 'public' && c.status === 'active');
+      },
+
+      async searchByName(query) {
+        const all = await this.getAll();
+        const lowerQuery = query.toLowerCase();
+        return all.filter(c =>
+          c.name.toLowerCase().includes(lowerQuery) ||
+          (c.description && c.description.toLowerCase().includes(lowerQuery))
+        );
       }
     },
 

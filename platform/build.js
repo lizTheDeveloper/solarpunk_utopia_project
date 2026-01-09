@@ -217,7 +217,16 @@ async function build() {
     }
 
     // Process JavaScript
-    const jsFiles = ['battery-utils.js', 'db.js', 'data-export.js', 'app.js'];
+    const jsFiles = [
+      'battery-utils.js',
+      'db.js',
+      'data-export.js',
+      'care-circles.js',
+      'care-circles-ui.js',
+      'communities.js',
+      'community-ui.js',
+      'app.js'
+    ];
     for (const file of jsFiles) {
       const srcPath = path.join(config.srcDir, 'scripts', file);
       const destPath = path.join(config.distDir, 'scripts', file);

@@ -203,6 +203,11 @@ export async function setupEmergencyContacts(
     checkInFrequency?: 'daily' | 'twice-daily' | 'weekly';
   } = {}
 ): Promise<CareCircle> {
+  // Prevent user from adding themselves as an emergency contact
+  if (contactIds.includes(userId)) {
+    throw new Error('You cannot add yourself as an emergency contact');
+  }
+
   const { setupCareCircle } = await import('./missed-check-in-alerts');
 
   return setupCareCircle(userId, contactIds, {
@@ -220,6 +225,10 @@ export async function addEmergencyContact(
   userId: string,
   contactId: string
 ): Promise<void> {
+  if (userId === contactId) {
+    throw new Error('You cannot add yourself as an emergency contact');
+  }
+
   const careCircle = db.getUserCareCircle(userId);
 
   if (!careCircle) {

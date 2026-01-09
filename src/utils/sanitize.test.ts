@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { escapeHtml, sanitizeAttribute, sanitizeUserContent, validateIdentifier } from './sanitize';
+import { escapeHtml, sanitizeAttribute, sanitizeUserContent, validateIdentifier, requireValidIdentifier } from './sanitize';
 
 describe('HTML Sanitization', () => {
   describe('escapeHtml', () => {
@@ -113,48 +113,75 @@ describe('HTML Sanitization', () => {
   });
 
   describe('validateIdentifier', () => {
-    it('should allow valid UUID-style IDs', () => {
+    it('should return true for valid UUID-style IDs', () => {
       const uuid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
-      expect(validateIdentifier(uuid)).toBe(uuid);
+      expect(validateIdentifier(uuid)).toBe(true);
     });
 
-    it('should allow alphanumeric with hyphens and underscores', () => {
-      expect(validateIdentifier('user-123_abc')).toBe('user-123_abc');
+    it('should return true for alphanumeric with hyphens and underscores', () => {
+      expect(validateIdentifier('user-123_abc')).toBe(true);
     });
 
-    it('should reject IDs with spaces', () => {
-      expect(validateIdentifier('user 123')).toBe('');
+    it('should return false for IDs with spaces', () => {
+      expect(validateIdentifier('user 123')).toBe(false);
     });
 
-    it('should reject IDs with special characters', () => {
-      expect(validateIdentifier('user@123')).toBe('');
-      expect(validateIdentifier('user#123')).toBe('');
-      expect(validateIdentifier('user$123')).toBe('');
+    it('should return false for IDs with special characters', () => {
+      expect(validateIdentifier('user@123')).toBe(false);
+      expect(validateIdentifier('user#123')).toBe(false);
+      expect(validateIdentifier('user$123')).toBe(false);
     });
 
-    it('should reject IDs with HTML tags', () => {
-      expect(validateIdentifier('<script>alert(1)</script>')).toBe('');
+    it('should return false for IDs with HTML tags', () => {
+      expect(validateIdentifier('<script>alert(1)</script>')).toBe(false);
     });
 
-    it('should reject IDs with quotes', () => {
-      expect(validateIdentifier('user"123')).toBe('');
-      expect(validateIdentifier("user'123")).toBe('');
+    it('should return false for IDs with quotes', () => {
+      expect(validateIdentifier('user"123')).toBe(false);
+      expect(validateIdentifier("user'123")).toBe(false);
     });
 
-    it('should handle undefined', () => {
-      expect(validateIdentifier(undefined)).toBe('');
+    it('should return false for undefined', () => {
+      expect(validateIdentifier(undefined)).toBe(false);
     });
 
-    it('should handle empty string', () => {
-      expect(validateIdentifier('')).toBe('');
+    it('should return false for empty string', () => {
+      expect(validateIdentifier('')).toBe(false);
     });
 
-    it('should allow numbers only', () => {
-      expect(validateIdentifier('123456')).toBe('123456');
+    it('should return true for numbers only', () => {
+      expect(validateIdentifier('123456')).toBe(true);
     });
 
-    it('should allow letters only', () => {
-      expect(validateIdentifier('abcdefg')).toBe('abcdefg');
+    it('should return true for letters only', () => {
+      expect(validateIdentifier('abcdefg')).toBe(true);
+    });
+  });
+
+  describe('requireValidIdentifier', () => {
+    it('should return the ID if valid', () => {
+      expect(requireValidIdentifier('valid-id-123')).toBe('valid-id-123');
+    });
+
+    it('should throw error for undefined ID', () => {
+      expect(() => requireValidIdentifier(undefined)).toThrow('ID is required');
+    });
+
+    it('should throw error for empty ID', () => {
+      expect(() => requireValidIdentifier('')).toThrow('ID is required');
+    });
+
+    it('should throw error for invalid characters', () => {
+      expect(() => requireValidIdentifier('invalid@id')).toThrow('ID contains invalid characters');
+    });
+
+    it('should use custom field name in error message', () => {
+      expect(() => requireValidIdentifier('', 'User ID')).toThrow('User ID is required');
+      expect(() => requireValidIdentifier('bad@id', 'Resource ID')).toThrow('Resource ID contains invalid characters');
+    });
+
+    it('should reject XSS attempts', () => {
+      expect(() => requireValidIdentifier('<script>alert(1)</script>')).toThrow('contains invalid characters');
     });
   });
 

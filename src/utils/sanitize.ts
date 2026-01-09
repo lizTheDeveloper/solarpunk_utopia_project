@@ -39,11 +39,25 @@ export function sanitizeUserContent(content: string | undefined): string {
 
 /**
  * Validate that a string is a safe identifier (for IDs, etc.)
- * Returns the value if safe, empty string if not
+ * Returns true if valid, false if not
  */
-export function validateIdentifier(id: string | undefined): string {
-  if (!id) return '';
+export function validateIdentifier(id: string | undefined): boolean {
+  if (!id) return false;
   // Only allow alphanumeric, hyphens, and underscores
-  if (!/^[a-zA-Z0-9_-]+$/.test(id)) return '';
+  if (!/^[a-zA-Z0-9_-]+$/.test(id)) return false;
+  return true;
+}
+
+/**
+ * Validate and sanitize an identifier, throwing an error if invalid
+ * Use this when you need to ensure an ID is valid before proceeding
+ */
+export function requireValidIdentifier(id: string | undefined, fieldName: string = 'ID'): string {
+  if (!id) {
+    throw new Error(`${fieldName} is required`);
+  }
+  if (!validateIdentifier(id)) {
+    throw new Error(`${fieldName} contains invalid characters`);
+  }
   return id;
 }

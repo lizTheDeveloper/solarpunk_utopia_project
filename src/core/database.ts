@@ -7,7 +7,7 @@
 
 import * as Automerge from '@automerge/automerge';
 import { openDB, type IDBPDatabase } from 'idb';
-import type { DatabaseSchema, Resource, Need, SkillOffer, EconomicEvent, UserProfile, Community, SyncStatus, CheckIn, CheckInStatus, CareCircle, MissedCheckInAlert, EmergencyAlert } from '../types';
+import type { DatabaseSchema, Resource, Need, SkillOffer, EconomicEvent, UserProfile, Community, CommunityGroup, SyncStatus, CheckIn, CheckInStatus, CareCircle, CareActivity, MissedCheckInAlert, EmergencyAlert } from '../types';
 
 const DB_NAME = 'solarpunk-utopia';
 const DB_VERSION = 1;
@@ -86,6 +86,22 @@ export class LocalDatabase {
         });
         await this.save();
       }
+
+      // Migrate: Add careActivities if it doesn't exist
+      if (!this.doc.careActivities) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.careActivities = {};
+        });
+        await this.save();
+      }
+
+      // Migrate: Add communityGroups if it doesn't exist
+      if (!this.doc.communityGroups) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.communityGroups = {};
+        });
+        await this.save();
+      }
     } else {
       // Create new document with initial schema
       this.doc = Automerge.from<DatabaseSchema>({
@@ -101,8 +117,10 @@ export class LocalDatabase {
           createdAt: Date.now(),
           memberCount: 0,
         },
+        communityGroups: {},
         checkIns: {},
         careCircles: {},
+        careActivities: {},
         missedCheckInAlerts: {},
         emergencyAlerts: {},
       });
@@ -190,6 +208,14 @@ export class LocalDatabase {
     return Object.values(this.getDoc().resources);
   }
 
+  getAvailableResources(): Resource[] {
+    return this.listResources().filter(r => r.available);
+  }
+
+  getResourcesByOwner(ownerId: string): Resource[] {
+    return this.listResources().filter(r => r.ownerId === ownerId);
+  }
+
   // ===== Need Operations =====
 
   async addNeed(need: Omit<Need, 'id' | 'createdAt' | 'updatedAt'>): Promise<Need> {
@@ -200,8 +226,15 @@ export class LocalDatabase {
       updatedAt: Date.now(),
     };
 
+    // Automerge doesn't support undefined values, so remove undefined fields
+    // or set them to null
+    const cleanNeed = { ...newNeed };
+    if (cleanNeed.resourceType === undefined) {
+      delete (cleanNeed as any).resourceType;
+    }
+
     await this.update((doc) => {
-      doc.needs[newNeed.id] = newNeed;
+      doc.needs[newNeed.id] = cleanNeed as any;
     });
 
     return newNeed;
@@ -286,6 +319,10 @@ export class LocalDatabase {
     return this.getDoc().users[id];
   }
 
+  listUsers(): UserProfile[] {
+    return Object.values(this.getDoc().users);
+  }
+
   // ===== Community Operations =====
 
   async updateCommunity(updates: Partial<Community>): Promise<void> {
@@ -296,6 +333,61 @@ export class LocalDatabase {
 
   getCommunity(): Community {
     return this.getDoc().community;
+  }
+
+  // ===== Community Group Operations =====
+  // REQ-GOV-001: Community Groups and Communes
+  // REQ-GOV-002: Community Philosophy and Values
+
+  async addCommunityGroup(group: Omit<CommunityGroup, 'id' | 'createdAt' | 'lastModified' | 'version'>): Promise<CommunityGroup> {
+    const newGroup: CommunityGroup = {
+      ...group,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      lastModified: Date.now(),
+      version: 1,
+    };
+
+    await this.update((doc) => {
+      doc.communityGroups[newGroup.id] = newGroup;
+    });
+
+    return newGroup;
+  }
+
+  async updateCommunityGroup(id: string, updates: Partial<CommunityGroup>): Promise<void> {
+    await this.update((doc) => {
+      if (doc.communityGroups[id]) {
+        Object.assign(doc.communityGroups[id], updates, {
+          lastModified: Date.now(),
+          version: doc.communityGroups[id].version + 1
+        });
+      }
+    });
+  }
+
+  async deleteCommunityGroup(id: string): Promise<void> {
+    await this.update((doc) => {
+      delete doc.communityGroups[id];
+    });
+  }
+
+  getCommunityGroup(id: string): CommunityGroup | undefined {
+    return this.getDoc().communityGroups[id];
+  }
+
+  listCommunityGroups(): CommunityGroup[] {
+    return Object.values(this.getDoc().communityGroups);
+  }
+
+  getActiveCommunityGroups(): CommunityGroup[] {
+    return this.listCommunityGroups().filter(g => g.status === 'active');
+  }
+
+  getPublicCommunityGroups(): CommunityGroup[] {
+    return this.listCommunityGroups().filter(g =>
+      g.visibility === 'public' && g.status === 'active'
+    );
   }
 
   // ===== Check-In Operations =====
@@ -436,6 +528,37 @@ export class LocalDatabase {
    */
   getCareCirclesForMember(memberId: string): CareCircle[] {
     return this.listCareCircles().filter(cc => cc.members.includes(memberId));
+  }
+
+  // ===== Care Activity Operations =====
+
+  async addCareActivity(activity: Omit<CareActivity, 'id' | 'createdAt'>): Promise<CareActivity> {
+    const newActivity: CareActivity = {
+      ...activity,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+    };
+
+    // Remove undefined values for Automerge compatibility
+    await this.update((doc) => {
+      const activityData: any = { ...newActivity };
+      Object.keys(activityData).forEach(key => {
+        if (activityData[key] === undefined) {
+          delete activityData[key];
+        }
+      });
+      doc.careActivities[newActivity.id] = activityData;
+    });
+
+    return newActivity;
+  }
+
+  listCareActivities(): CareActivity[] {
+    return Object.values(this.getDoc().careActivities);
+  }
+
+  getCareActivity(id: string): CareActivity | undefined {
+    return this.getDoc().careActivities[id];
   }
 
   // ===== Missed Check-In Alert Operations =====

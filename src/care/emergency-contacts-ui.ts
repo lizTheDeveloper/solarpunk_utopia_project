@@ -19,8 +19,21 @@ import {
   hasEmergencyContacts,
 } from './emergency-contacts';
 import { db } from '../core/database';
-import { sanitizeUserContent, validateIdentifier } from '../utils/sanitize';
+import { sanitizeUserContent, requireValidIdentifier } from '../utils/sanitize';
 import type { EmergencyAlert } from '../types';
+
+/**
+ * Safely get identifier from data attribute
+ * Returns the ID if valid, undefined if not
+ */
+function getSafeIdentifier(id: string | undefined): string | undefined {
+  if (!id) return undefined;
+  try {
+    return requireValidIdentifier(id);
+  } catch {
+    return undefined;
+  }
+}
 
 /**
  * Render emergency alert button (panic button)
@@ -76,7 +89,7 @@ export function renderEmergencyContactsManagement(userId: string): string {
           return `
             <li class="contact-item">
               <span class="contact-name">${sanitizeUserContent(displayName)}</span>
-              <button class="btn-remove-contact" data-contact-id="${validateIdentifier(contactId)}">
+              <button class="btn-remove-contact" data-contact-id="${contactId}">
                 Remove
               </button>
             </li>
@@ -230,13 +243,13 @@ function renderEmergencyAlertCard(alert: EmergencyAlert): string {
       </div>
 
       <div class="alert-actions">
-        <button class="btn-respond-onway" data-alert-id="${validateIdentifier(alert.id)}">
+        <button class="btn-respond-onway" data-alert-id="${alert.id}">
           🏃 I'm on my way
         </button>
-        <button class="btn-respond-contacted" data-alert-id="${validateIdentifier(alert.id)}">
+        <button class="btn-respond-contacted" data-alert-id="${alert.id}">
           📞 I've made contact
         </button>
-        <button class="btn-respond-arrived" data-alert-id="${validateIdentifier(alert.id)}">
+        <button class="btn-respond-arrived" data-alert-id="${alert.id}">
           ✓ I've arrived
         </button>
       </div>
@@ -366,7 +379,7 @@ export function initEmergencyAlertHandlers(userId: string) {
   // Remove emergency contact buttons
   document.querySelectorAll('.btn-remove-contact').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const contactId = validateIdentifier((e.target as HTMLElement).dataset.contactId);
+      const contactId = getSafeIdentifier((e.target as HTMLElement).dataset.contactId);
       if (!contactId) return;
 
       const user = db.getUserProfile(contactId);
@@ -389,7 +402,7 @@ export function initEmergencyAlertHandlers(userId: string) {
   // Response buttons for emergency alerts
   document.querySelectorAll('.btn-respond-onway').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const alertId = validateIdentifier((e.target as HTMLElement).dataset.alertId);
+      const alertId = getSafeIdentifier((e.target as HTMLElement).dataset.alertId);
       if (!alertId) return;
 
       const eta = prompt('How many minutes until you arrive? (optional)');
@@ -412,7 +425,7 @@ export function initEmergencyAlertHandlers(userId: string) {
 
   document.querySelectorAll('.btn-respond-contacted').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const alertId = validateIdentifier((e.target as HTMLElement).dataset.alertId);
+      const alertId = getSafeIdentifier((e.target as HTMLElement).dataset.alertId);
       if (!alertId) return;
 
       const message = prompt('Optional: Add a note about the contact');
@@ -433,7 +446,7 @@ export function initEmergencyAlertHandlers(userId: string) {
 
   document.querySelectorAll('.btn-respond-arrived').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const alertId = validateIdentifier((e.target as HTMLElement).dataset.alertId);
+      const alertId = getSafeIdentifier((e.target as HTMLElement).dataset.alertId);
       if (!alertId) return;
 
       try {

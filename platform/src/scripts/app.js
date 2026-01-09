@@ -183,6 +183,16 @@
           await window.SolarpunkDB.init();
           console.log('[App] Database initialized');
 
+          // Initialize care circles module
+          if (window.SolarpunkCareCircles) {
+            try {
+              await window.SolarpunkCareCircles.init(window.SolarpunkDB.db);
+              console.log('[App] Care circles initialized');
+            } catch (error) {
+              console.error('[App] Care circles initialization failed:', error);
+            }
+          }
+
           // Enable auto-backup (every hour)
           if (window.SolarpunkExport) {
             window.SolarpunkExport.enableAutoBackup(60);
@@ -267,6 +277,20 @@
 
         <main style="padding: 1rem; flex: 1; max-width: 800px; margin: 0 auto;">
           <section style="margin-bottom: 2rem;">
+            <h2>Community Features</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+              <button id="view-communities-btn" style="padding: 1.5rem; background-color: rgba(74, 157, 95, 0.2); color: inherit; border: 2px solid var(--color-primary); border-radius: 8px; cursor: pointer; text-align: left;">
+                <h3 style="margin-bottom: 0.5rem;">🏘️ Communities</h3>
+                <p style="font-size: 0.875rem; opacity: 0.8;">Create and manage community groups, communes, and mutual aid networks</p>
+              </button>
+              <button id="view-care-circles-btn" style="padding: 1.5rem; background-color: rgba(74, 157, 95, 0.2); color: inherit; border: 2px solid var(--color-primary); border-radius: 8px; cursor: pointer; text-align: left;">
+                <h3 style="margin-bottom: 0.5rem;">💚 Care Circles</h3>
+                <p style="font-size: 0.875rem; opacity: 0.8;">Coordinate mutual care and support for community members</p>
+              </button>
+            </div>
+          </section>
+
+          <section style="margin-bottom: 2rem;">
             <h2>Resource Sharing (Demo)</h2>
             <p>Share items, tools, and resources with your community. No money, just mutual aid.</p>
 
@@ -324,13 +348,23 @@
           </section>
 
           <section style="margin-top: 2rem; padding: 1rem; background-color: rgba(74, 157, 95, 0.1); border-radius: 4px;">
-            <h3>Phase I Complete</h3>
+            <h3>Implementation Status</h3>
             <p style="margin-top: 0.5rem;">
+              <strong>Phase 1 - Liberation Infrastructure:</strong><br>
               ✓ Offline-first database with CRDT support<br>
               ✓ Progressive Web App (installable)<br>
               ✓ Battery optimization<br>
               ✓ Data export/import<br>
               ✓ Runs on old Android phones via Termux
+            </p>
+            <p style="margin-top: 1rem;">
+              <strong>Phase 2 - Trust Building (In Progress):</strong><br>
+              ✓ Daily check-in prompts<br>
+              ✓ "I'm okay" / "Need support" buttons<br>
+              ✓ Missed check-in alerts<br>
+              ✓ Emergency contact circles<br>
+              ✓ Care circle formation<br>
+              ✓ Community/group creation
             </p>
           </section>
         </main>
@@ -351,10 +385,114 @@
       // Set up export/import buttons
       this.setupDataButtons();
 
+      // Set up feature navigation buttons
+      this.setupCommunitiesButton();
+      this.setupCareCirclesButton();
+
       // Update status displays
       this.updateStatusDisplay();
       this.updateDatabaseStatus();
       this.updateBatteryStatus();
+    }
+
+    setupCareCirclesButton() {
+      const careCirclesBtn = document.getElementById('view-care-circles-btn');
+      if (careCirclesBtn) {
+        careCirclesBtn.addEventListener('click', () => {
+          this.showCareCircles();
+        });
+      }
+    }
+
+    showCareCircles() {
+      const appContainer = document.getElementById('app');
+      const mainContent = appContainer.querySelector('main');
+      if (!mainContent) return;
+
+      // Clear main content
+      mainContent.innerHTML = `
+        <div style="margin-bottom: 1rem;">
+          <button id="back-to-home" style="padding: 0.5rem 1rem; background-color: rgba(255,255,255,0.1); color: inherit; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; cursor: pointer;">
+            ← Back to Home
+          </button>
+        </div>
+        <div id="care-circles-container"></div>
+      `;
+
+      // Set up back button
+      const backBtn = mainContent.querySelector('#back-to-home');
+      if (backBtn) {
+        backBtn.addEventListener('click', () => this.render());
+      }
+
+      // Render care circles dashboard
+      const container = mainContent.querySelector('#care-circles-container');
+      if (container && window.SolarpunkCareCirclesUI) {
+        window.SolarpunkCareCirclesUI.renderDashboard(container);
+
+        // Set up click handlers for circles
+        container.addEventListener('click', async (e) => {
+          const circleCard = e.target.closest('.circle-card');
+          if (circleCard) {
+            const circleId = circleCard.dataset.circleId;
+            await window.SolarpunkCareCirclesUI.showCircleDetails(circleId, container);
+          }
+        });
+      }
+    }
+
+    setupCommunitiesButton() {
+      const communitiesBtn = document.getElementById('view-communities-btn');
+      if (communitiesBtn) {
+        communitiesBtn.addEventListener('click', () => {
+          this.showCommunities();
+        });
+      }
+    }
+
+    async showCommunities() {
+      const appContainer = document.getElementById('app');
+      const mainContent = appContainer.querySelector('main');
+      if (!mainContent) return;
+
+      // Initialize community UI if not already done
+      if (window.CommunityUI) {
+        await window.CommunityUI.init();
+      }
+
+      // Clear main content
+      mainContent.innerHTML = `
+        <div style="margin-bottom: 1rem;">
+          <button id="back-to-home" style="padding: 0.5rem 1rem; background-color: rgba(255,255,255,0.1); color: inherit; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; cursor: pointer;">
+            ← Back to Home
+          </button>
+        </div>
+        <div id="communities-container"></div>
+      `;
+
+      // Set up back button
+      const backBtn = mainContent.querySelector('#back-to-home');
+      if (backBtn) {
+        backBtn.addEventListener('click', () => this.render());
+      }
+
+      // Render communities page
+      const container = mainContent.querySelector('#communities-container');
+      if (container && window.CommunityUI) {
+        const html = await window.CommunityUI.renderCommunitiesPage();
+        container.innerHTML = html;
+
+        // Set up form handler
+        const form = container.querySelector('#create-community-form');
+        if (form) {
+          form.addEventListener('submit', (e) => window.CommunityUI.handleCreateCommunity(e));
+        }
+      }
+    }
+
+    async renderCommunitiesSection() {
+      // Re-render the communities section
+      await this.showCommunities();
     }
 
     setupResourceForm() {
