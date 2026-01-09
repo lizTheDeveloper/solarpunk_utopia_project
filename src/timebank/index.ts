@@ -110,6 +110,32 @@ export type {
   ScheduleHelpSessionOptions,
 } from './schedule-help-sessions';
 
+// Shift Volunteering (REQ-TIME-017, REQ-TIME-005)
+export {
+  createVolunteerShift,
+  signUpForShift,
+  cancelShiftSignup,
+  startShift,
+  completeShift,
+  cancelShift,
+  createRecurringShift,
+  toggleRecurringShift,
+  getVolunteerShift,
+  browseOpenShifts,
+  getMyShifts,
+  getOrganizedShifts,
+  getUpcomingShifts as getUpcomingVolunteerShifts,
+  getShiftsByCategory,
+  getActiveRecurringShifts,
+  formatShiftForDisplay,
+  formatRecurringShiftForDisplay,
+} from './shift-volunteering';
+
+export type {
+  CreateVolunteerShiftOptions,
+  CreateRecurringShiftOptions,
+} from './shift-volunteering';
+
 // Community Contribution Tracking (REQ-TIME-002, REQ-TIME-019 to REQ-TIME-022)
 export {
   recordContribution,

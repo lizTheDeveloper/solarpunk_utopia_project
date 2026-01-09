@@ -387,6 +387,10 @@ export interface DatabaseSchema {
   randomKindness: Record<string, RandomKindness>;
   burnoutAssessments: Record<string, BurnoutAssessment>;
   participationVitality: Record<string, ParticipationVitality>;
+  pickupCoordinations: Record<string, PickupCoordination>;
+  volunteerShifts: Record<string, VolunteerShift>;
+  recurringShiftPatterns: Record<string, RecurringShiftPattern>;
+  skillCategories: Record<string, SkillCategory>;
 }
 
 /**
@@ -870,4 +874,142 @@ export interface ParticipationVitality {
   };
   insights: string[]; // Human-readable insights (e.g., "Need more gardeners")
   generatedAt: number;
+}
+
+/**
+ * Pickup Coordination - Phase 3, Group C
+ * REQ-SHARE-013: Resource Pickup and Delivery
+ *
+ * Facilitates coordination of resource pickup between community members
+ */
+export type PickupStatus =
+  | 'pending'        // Initial state, waiting for coordination
+  | 'scheduled'      // Time and place agreed upon
+  | 'in-progress'    // Pickup happening now
+  | 'completed'      // Pickup confirmed complete
+  | 'cancelled';     // Pickup cancelled
+
+export type PickupMethod =
+  | 'pickup'         // Receiver picks up from provider
+  | 'delivery'       // Provider delivers to receiver
+  | 'meetup'         // Meet at neutral location
+  | 'other';         // Other arrangement
+
+export interface PickupMessage {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: number;
+}
+
+export interface PickupCoordination {
+  id: string;
+  resourceId: string;
+  providerId: string;
+  receiverId: string;
+  eventId?: string;
+  bookingId?: string;
+  status: PickupStatus;
+  method: PickupMethod;
+  scheduledTime?: number;
+  location?: string;
+  directions?: string;
+  messages: PickupMessage[];
+  completedAt?: number;
+  completedBy?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * Volunteer Shifts - Phase 3, Group C
+ * REQ-TIME-017: Group Coordination
+ * REQ-TIME-005: Collective Time Projects
+ */
+export type ShiftStatus = 'open' | 'filled' | 'in-progress' | 'completed' | 'cancelled';
+
+export interface ShiftRole {
+  name: string;
+  description?: string;
+  volunteersNeeded: number;
+  volunteersAssigned: string[];
+}
+
+export interface VolunteerShift {
+  id: string;
+  organizerId: string;
+  title: string;
+  description: string;
+  category: string;
+  shiftDate: number;
+  shiftTime: TimeRange;
+  estimatedDuration?: number;
+  location: {
+    name: string;
+    address?: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  volunteersNeeded: number;
+  volunteersSignedUp: string[];
+  status: ShiftStatus;
+  roles?: ShiftRole[];
+  communityEventId?: string;
+  whatToBring?: string[];
+  preparationNotes?: string;
+  accessibilityInfo?: string;
+  skillsNeeded?: string[];
+  completionNotes?: string;
+  impactDescription?: string;
+  cancelledAt?: number;
+  cancellationReason?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface RecurringShiftPattern {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  location: {
+    name: string;
+    address?: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  recurrence: RecurrencePattern;
+  shiftTime: TimeRange;
+  estimatedDuration?: number;
+  volunteersNeeded: number;
+  organizerId: string;
+  active: boolean;
+  whatToBring?: string[];
+  preparationNotes?: string;
+  accessibilityInfo?: string;
+  skillsNeeded?: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * Skill Categories - Phase 3, Group C
+ * REQ-TIME-009: Skill Taxonomy
+ *
+ * Community-defined skill taxonomy that emerges from practice
+ */
+export interface SkillCategory {
+  id: string;
+  name: string;
+  description: string;
+  createdBy: string;
+  examples: string[];
+  relatedCategories: string[];
+  usageCount: number;
+  createdAt: number;
+  updatedAt: number;
 }

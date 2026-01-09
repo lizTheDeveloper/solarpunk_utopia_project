@@ -184,18 +184,19 @@ describe('Equipment Booking System', () => {
       const threeDaysFromNow = tomorrow + (2 * 24 * 60 * 60 * 1000);
 
       const booking = await createBooking('user-2', tool.id, tomorrow, threeDaysFromNow);
-      expect(booking.success).toBe(true);
+      expect(booking).toBeDefined();
+      expect(booking.id).toBeDefined();
 
       // Update booking
       const newEnd = tomorrow + (24 * 60 * 60 * 1000);
-      const updateResult = await updateBooking(booking.booking!.id, 'user-2', {
+      const updatedBooking = await updateBooking(booking.id, 'user-2', {
         endTime: newEnd,
         purpose: 'Cutting firewood',
       });
 
-      expect(updateResult.success).toBe(true);
-      expect(updateResult.booking?.endTime).toBe(newEnd);
-      expect(updateResult.booking?.purpose).toBe('Cutting firewood');
+      expect(updatedBooking).toBeDefined();
+      expect(updatedBooking.endTime).toBe(newEnd);
+      expect(updatedBooking.purpose).toBe('Cutting firewood');
     });
 
     it('should allow resource owner to update booking', async () => {
@@ -210,14 +211,14 @@ describe('Equipment Booking System', () => {
       const dayAfter = tomorrow + (24 * 60 * 60 * 1000);
 
       const booking = await createBooking('user-2', tool.id, tomorrow, dayAfter);
-      expect(booking.success).toBe(true);
+      expect(booking).toBeDefined();
 
       // Owner updates
-      const updateResult = await updateBooking(booking.booking!.id, 'user-1', {
+      const updatedBooking = await updateBooking(booking.id, 'user-1', {
         notes: 'Confirmed pickup time',
       });
 
-      expect(updateResult.success).toBe(true);
+      expect(updatedBooking).toBeDefined();
     });
 
     it('should reject unauthorized updates', async () => {
@@ -232,15 +233,14 @@ describe('Equipment Booking System', () => {
       const dayAfter = tomorrow + (24 * 60 * 60 * 1000);
 
       const booking = await createBooking('user-2', tool.id, tomorrow, dayAfter);
-      expect(booking.success).toBe(true);
+      expect(booking).toBeDefined();
 
-      // User-3 tries to update
-      const updateResult = await updateBooking(booking.booking!.id, 'user-3', {
-        notes: 'Hacked',
-      });
-
-      expect(updateResult.success).toBe(false);
-      expect(updateResult.error).toContain('Not authorized');
+      // User-3 tries to update - should throw error
+      await expect(
+        updateBooking(booking.id, 'user-3', {
+          notes: 'Hacked',
+        })
+      ).rejects.toThrow('Not authorized');
     });
 
     it('should prevent updating to conflicting times', async () => {
@@ -259,16 +259,15 @@ describe('Equipment Booking System', () => {
       const booking1 = await createBooking('user-2', tool.id, tomorrow, threeDaysFromNow);
       const booking2 = await createBooking('user-3', tool.id, fiveDaysFromNow, fiveDaysFromNow + (24 * 60 * 60 * 1000));
 
-      expect(booking1.success).toBe(true);
-      expect(booking2.success).toBe(true);
+      expect(booking1).toBeDefined();
+      expect(booking2).toBeDefined();
 
-      // Try to extend booking1 into booking2's time
-      const updateResult = await updateBooking(booking1.booking!.id, 'user-2', {
-        endTime: fiveDaysFromNow + (12 * 60 * 60 * 1000), // Overlap by 12 hours
-      });
-
-      expect(updateResult.success).toBe(false);
-      expect(updateResult.error).toContain('conflicts');
+      // Try to extend booking1 into booking2's time - should throw error
+      await expect(
+        updateBooking(booking1.id, 'user-2', {
+          endTime: fiveDaysFromNow + (12 * 60 * 60 * 1000), // Overlap by 12 hours
+        })
+      ).rejects.toThrow('conflicts');
     });
   });
 
@@ -285,13 +284,11 @@ describe('Equipment Booking System', () => {
       const dayAfter = tomorrow + (24 * 60 * 60 * 1000);
 
       const booking = await createBooking('user-2', tool.id, tomorrow, dayAfter);
-      expect(booking.success).toBe(true);
+      expect(booking).toBeDefined();
 
-      const result = await cancelBooking(booking.booking!.id, 'user-2', 'Plans changed');
+      await cancelBooking(booking.id, 'user-2', 'Plans changed');
 
-      expect(result.success).toBe(true);
-
-      const cancelledBooking = getBooking(booking.booking!.id);
+      const cancelledBooking = getBooking(booking.id);
       expect(cancelledBooking?.status).toBe('cancelled');
       expect(cancelledBooking?.notes).toContain('Plans changed');
     });
@@ -308,13 +305,11 @@ describe('Equipment Booking System', () => {
       const dayAfter = tomorrow + (24 * 60 * 60 * 1000);
 
       const booking = await createBooking('user-2', tool.id, tomorrow, dayAfter);
-      expect(booking.success).toBe(true);
+      expect(booking).toBeDefined();
 
-      const result = await cancelBooking(booking.booking!.id, 'user-1', 'Tool needs repair');
+      await cancelBooking(booking.id, 'user-1', 'Tool needs repair');
 
-      expect(result.success).toBe(true);
-
-      const cancelledBooking = getBooking(booking.booking!.id);
+      const cancelledBooking = getBooking(booking.id);
       expect(cancelledBooking?.status).toBe('cancelled');
     });
   });
@@ -333,14 +328,13 @@ describe('Equipment Booking System', () => {
 
       // 1. Create booking
       const booking = await createBooking('user-2', tool.id, tomorrow, dayAfter);
-      expect(booking.success).toBe(true);
-      expect(booking.booking?.status).toBe('confirmed');
+      expect(booking).toBeDefined();
+      expect(booking.status).toBe('confirmed');
 
       // 2. Mark as active (pickup)
-      const activeResult = await markBookingActive(booking.booking!.id, 'user-1');
-      expect(activeResult.success).toBe(true);
+      await markBookingActive(booking.id, 'user-1');
 
-      const activeBooking = getBooking(booking.booking!.id);
+      const activeBooking = getBooking(booking.id);
       expect(activeBooking?.status).toBe('active');
 
       // Resource should be unavailable
@@ -348,13 +342,12 @@ describe('Equipment Booking System', () => {
       expect(resource?.available).toBe(false);
 
       // 3. Complete booking (return)
-      const completeResult = await completeBooking(booking.booking!.id, 'user-1', {
+      await completeBooking(booking.id, 'user-1', {
         condition: 'good',
         notes: 'Everything worked great',
       });
-      expect(completeResult.success).toBe(true);
 
-      const completedBooking = getBooking(booking.booking!.id);
+      const completedBooking = getBooking(booking.id);
       expect(completedBooking?.status).toBe('completed');
 
       // Resource should be available again
@@ -374,12 +367,12 @@ describe('Equipment Booking System', () => {
       const dayAfter = tomorrow + (24 * 60 * 60 * 1000);
 
       const booking = await createBooking('user-2', tool.id, tomorrow, dayAfter);
-      expect(booking.success).toBe(true);
+      expect(booking).toBeDefined();
 
       // User-2 tries to activate (should fail)
-      const result = await markBookingActive(booking.booking!.id, 'user-2');
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Only resource owner');
+      await expect(
+        markBookingActive(booking.id, 'user-2')
+      ).rejects.toThrow('Only resource owner');
     });
   });
 

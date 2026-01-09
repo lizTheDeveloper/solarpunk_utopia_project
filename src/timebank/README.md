@@ -260,6 +260,182 @@ Format skill statistics for CLI display showing community overview.
 
 Format a single skill offer for display with emoji badges.
 
+## Shift Volunteering (NEW!)
+
+Coordinate multiple volunteers for community events and ongoing needs.
+
+**REQ-TIME-017: Group Coordination**
+**REQ-TIME-005: Collective Time Projects**
+
+### Features
+
+#### Create One-Time Volunteer Shifts
+
+Organize volunteers for specific events like garden workdays, food distribution, repair cafes, or cleanup days.
+
+```typescript
+import { createVolunteerShift } from './timebank';
+
+const shift = await createVolunteerShift({
+  organizerId: 'user-maria',
+  title: 'Community Garden Workday',
+  description: 'Help us prepare the garden for spring planting!',
+  category: 'gardening',
+  shiftDate: Date.now() + 7 * 24 * 60 * 60 * 1000, // Next Saturday
+  shiftTime: { startTime: '09:00', endTime: '12:00' },
+  estimatedDuration: 180,
+  location: {
+    name: 'Main Street Community Garden',
+    address: '123 Main St',
+  },
+  volunteersNeeded: 12,
+  whatToBring: ['Gloves', 'Water bottle', 'Sun hat'],
+  preparationNotes: 'Wear clothes that can get dirty',
+  accessibilityInfo: 'Wheelchair accessible paths available',
+});
+```
+
+#### Role-Based Volunteering
+
+Organize shifts with specific roles for better coordination:
+
+```typescript
+const foodBankShift = await createVolunteerShift({
+  organizerId: 'user-sam',
+  title: 'Food Bank Distribution',
+  description: 'Help distribute food to families',
+  category: 'food-distribution',
+  shiftDate: nextSaturday,
+  shiftTime: { startTime: '14:00', endTime: '18:00' },
+  location: { name: 'Community Food Bank' },
+  volunteersNeeded: 15,
+  roles: [
+    { name: 'Greeter', description: 'Welcome families', volunteersNeeded: 2 },
+    { name: 'Food Packer', description: 'Pack food boxes', volunteersNeeded: 8 },
+    { name: 'Car Loader', description: 'Load cars', volunteersNeeded: 5 },
+  ],
+});
+
+// Sign up for a specific role
+await signUpForShift(foodBankShift.id, 'user-alex', 0); // Greeter role (index 0)
+```
+
+#### Recurring Shifts
+
+Set up weekly, bi-weekly, or monthly shifts for ongoing community needs:
+
+```typescript
+import { createRecurringShift } from './timebank';
+
+const recurringPattern = await createRecurringShift({
+  organizerId: 'user-pat',
+  title: 'Weekly Repair Cafe',
+  description: 'Fix broken items and share repair skills',
+  category: 'repair-cafe',
+  location: { name: 'Community Center' },
+  recurrence: {
+    type: 'weekly',
+    daysOfWeek: [0], // Sunday
+  },
+  shiftTime: { startTime: '10:00', endTime: '14:00' },
+  volunteersNeeded: 8,
+  skillsNeeded: ['Electronics repair', 'Sewing', 'Bicycle repair'],
+});
+```
+
+#### Sign Up and Manage Volunteers
+
+```typescript
+import { signUpForShift, cancelShiftSignup, browseOpenShifts } from './timebank';
+
+// Browse available shifts
+const openShifts = browseOpenShifts({ category: 'gardening' });
+
+// Sign up
+await signUpForShift(shiftId, 'user-alex');
+
+// Cancel if plans change
+await cancelShiftSignup(shiftId, 'user-alex');
+
+// Get my upcoming shifts
+const myShifts = getMyShifts('user-alex');
+```
+
+#### Track Impact (Not Debt!)
+
+Complete shifts with celebration and impact tracking:
+
+```typescript
+import { completeShift } from './timebank';
+
+await completeShift(
+  shiftId,
+  organizerId,
+  'Amazing volunteers! Great teamwork! 💚',
+  'Built 6 new raised beds, spread 2 cubic yards of compost, planted 50 tomato seedlings. Garden is ready for spring!'
+);
+```
+
+### API Reference - Shift Volunteering
+
+#### `createVolunteerShift(options: CreateVolunteerShiftOptions): Promise<VolunteerShift>`
+
+Create a one-time volunteer shift.
+
+**Parameters:**
+- `organizerId` (string, required): User creating the shift
+- `title` (string, required): Shift title
+- `description` (string, required): What volunteers will do
+- `category` (string, required): Category (e.g., 'gardening', 'food-distribution')
+- `shiftDate` (number, required): Unix timestamp for shift date
+- `shiftTime` (TimeRange, required): Start and end time
+- `location` (object, required): Location with name, optional address/coordinates
+- `volunteersNeeded` (number, required): How many volunteers needed
+- `roles` (optional): Array of role objects for role-based volunteering
+- `estimatedDuration` (optional): Duration in minutes
+- `communityEventId` (optional): Link to community event
+- `whatToBring` (optional): Array of items to bring
+- `preparationNotes` (optional): Prep instructions
+- `accessibilityInfo` (optional): Accessibility details
+- `skillsNeeded` (optional): Array of helpful skills
+
+#### `signUpForShift(shiftId: string, userId: string, roleIndex?: number): Promise<void>`
+
+Sign up for a volunteer shift, optionally for a specific role.
+
+#### `cancelShiftSignup(shiftId: string, userId: string): Promise<void>`
+
+Cancel your signup for a shift.
+
+#### `completeShift(shiftId: string, organizerId: string, notes?: string, impact?: string): Promise<void>`
+
+Mark shift as completed with celebration and impact tracking.
+
+#### `createRecurringShift(options: CreateRecurringShiftOptions): Promise<RecurringShiftPattern>`
+
+Create a recurring shift pattern (weekly, bi-weekly, monthly).
+
+#### `browseOpenShifts(options?: { category?: string; startDate?: number; endDate?: number }): VolunteerShift[]`
+
+Browse available shifts with optional filtering.
+
+#### `getMyShifts(userId: string): VolunteerShift[]`
+
+Get shifts you've signed up for.
+
+#### `getUpcomingVolunteerShifts(userId?: string): VolunteerShift[]`
+
+Get upcoming shifts (optionally filtered by user).
+
+### Gift Economy Principles - Shifts
+
+- ✅ **No hour tracking** - Track impact and celebration, not debt
+- ✅ **Flexible commitment** - Sign up for what you can, when you can
+- ✅ **Role coordination** - Roles help organize, not create hierarchy
+- ✅ **Accessibility-first** - Welcome everyone with accommodations
+- ✅ **Impact celebration** - Celebrate what we built together
+- ✅ **Collective action** - Many hands make light work!
+
 ## Security Features
 
 - **Input Sanitization**: All user content is sanitized to prevent XSS attacks
@@ -328,10 +504,10 @@ Skills are stored in the local Automerge CRDT database, which means:
 - ✅ **Schedule help sessions** (REQ-TIME-016)
 - ✅ **Gratitude wall** (REQ-TIME-022, REQ-TIME-018)
 
-### ✅ Group B: Scheduling & Coverage (Complete)
+### ✅ Group B: Scheduling & Coverage (In Progress)
 
 - ✅ **Availability Calendar** (REQ-TIME-016): Specify when you're available with recurring patterns
-- ⏸️ Shift volunteering (planned)
+- ✅ **Shift volunteering** (REQ-TIME-017, REQ-TIME-005): Coordinate volunteers for community events and ongoing needs
 - ⏸️ Shift swapping (planned)
 - ⏸️ Coverage finding (planned)
 

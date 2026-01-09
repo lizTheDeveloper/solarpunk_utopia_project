@@ -148,7 +148,7 @@ For each feature: *"Does this increase community autonomy, or create new depende
 | Offer skills/time | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Browse available skills | Simple | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Request help | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | time-bank.md | ✅ DONE |
-| Skills categories | Simple | ✊✊ | 🌻🌻 | time-bank.md |
+| Skills categories | Simple | ✊✊ | 🌻🌻 | time-bank.md | ✅ DONE |
 | Thank you / appreciation notes | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md |
 
 ### Group B: Scheduling & Coverage
@@ -157,18 +157,18 @@ For each feature: *"Does this increase community autonomy, or create new depende
 |---------|------------|------------|-----|----------------|--------|
 | Availability calendar | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Schedule help sessions | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
-| Shift volunteering | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md |
+| Shift volunteering | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Shift swapping | Medium | ✊✊✊ | 🌻🌻🌻🌻 | time-bank.md |
 | Coverage finding | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md |
 
-### Group C: Tool Library & Equipment
+### Group C: Tool Library & Equipment - 100% Complete
 
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
 | Tool library | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | resource-sharing.md | ✅ DONE |
 | Equipment booking | Medium | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md | ✅ DONE |
-| Item pickup coordination | Medium | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md |
-| Usage guidelines per item | Simple | ✊✊ | 🌻🌻 | resource-sharing.md |
+| Item pickup coordination | Medium | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md | ✅ DONE |
+| Usage guidelines per item | Simple | ✊✊ | 🌻🌻 | resource-sharing.md | ✅ DONE |
 
 ### Group D: Community Vitality (Not Debt!) - 100% Complete
 
