@@ -125,12 +125,12 @@ For each feature: *"Does this increase community autonomy, or create new depende
 | Respond to needs | Simple | ✊✊✊✊ | 🌻🌻🌻🌻🌻 | resource-sharing.md | ✅ DONE |
 | Urgency indicators | Simple | ✊✊✊✊ | 🌻🌻🌻 | resource-sharing.md | ✅ DONE |
 
-### Group D: Community Basics
+### Group D: Community Basics - 50% Complete
 
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
 | Community/group creation | Simple | ✊✊✊✊ | 🌻🌻🌻 | community-governance.md | ✅ DONE |
-| About pages & philosophy pages | Simple | ✊✊✊ | 🌻🌻🌻 | community-governance.md | |
+| About pages & philosophy pages | Simple | ✊✊✊ | 🌻🌻🌻 | community-governance.md | ✅ DONE |
 | Community bulletin board | Simple | ✊✊✊ | 🌻🌻🌻 | community-governance.md | |
 | Community events listing | Simple | ✊✊✊ | 🌻🌻🌻🌻 | community-governance.md | |
 
