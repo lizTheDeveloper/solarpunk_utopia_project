@@ -7,7 +7,7 @@
 
 import * as Automerge from '@automerge/automerge';
 import { openDB, type IDBPDatabase } from 'idb';
-import type { DatabaseSchema, Resource, Need, SkillOffer, EconomicEvent, UserProfile, Community, CommunityGroup, SyncStatus, CheckIn, CheckInStatus, CareCircle, CareActivity, MissedCheckInAlert, EmergencyAlert, BulletinPost, BulletinComment, BulletinRSVP, RSVPResponse, CommunityEvent, CommunityEventRSVP, EventRSVPStatus, CommunityEventComment, CommunityEventType } from '../types';
+import type { DatabaseSchema, Resource, Need, SkillOffer, AvailabilitySlot, EconomicEvent, UserProfile, Community, CommunityGroup, SyncStatus, CheckIn, CheckInStatus, CareCircle, CareActivity, MissedCheckInAlert, EmergencyAlert, BulletinPost, BulletinComment, BulletinRSVP, RSVPResponse, CommunityEvent, CommunityEventRSVP, EventRSVPStatus, CommunityEventComment, CommunityEventType, ContributionRecord, BurnoutAssessment } from '../types';
 
 const DB_NAME = 'solarpunk-utopia';
 const DB_VERSION = 1;
@@ -118,12 +118,61 @@ export class LocalDatabase {
         });
         await this.save();
       }
+
+      // Migrate: Add availabilitySlots if it doesn't exist
+      if (!this.doc.availabilitySlots) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.availabilitySlots = {};
+        });
+        await this.save();
+      }
+
+      // Migrate: Add contributions if it doesn't exist
+      if (!this.doc.contributions) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.contributions = {};
+        });
+        await this.save();
+      }
+
+      // Migrate: Add gratitude if it doesn't exist
+      if (!this.doc.gratitude) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.gratitude = {};
+        });
+        await this.save();
+      }
+
+      // Migrate: Add randomKindness if it doesn't exist
+      if (!this.doc.randomKindness) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.randomKindness = {};
+        });
+        await this.save();
+      }
+
+      // Migrate: Add burnoutAssessments if it doesn't exist
+      if (!this.doc.burnoutAssessments) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.burnoutAssessments = {};
+        });
+        await this.save();
+      }
+
+      // Migrate: Add participationVitality if it doesn't exist
+      if (!this.doc.participationVitality) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.participationVitality = {};
+        });
+        await this.save();
+      }
     } else {
       // Create new document with initial schema
       this.doc = Automerge.from<DatabaseSchema>({
         resources: {},
         needs: {},
         skills: {},
+        availabilitySlots: {},
         events: {},
         users: {},
         community: {
@@ -141,6 +190,11 @@ export class LocalDatabase {
         emergencyAlerts: {},
         bulletinPosts: {},
         communityEvents: {},
+        contributions: {},
+        gratitude: {},
+        randomKindness: {},
+        burnoutAssessments: {},
+        participationVitality: {},
       });
       await this.save();
     }
@@ -303,6 +357,35 @@ export class LocalDatabase {
 
   listSkills(): SkillOffer[] {
     return Object.values(this.getDoc().skills);
+  }
+
+  // ===== Availability Slot Operations =====
+
+  async addAvailabilitySlot(slot: Omit<AvailabilitySlot, 'id' | 'createdAt' | 'updatedAt'>): Promise<AvailabilitySlot> {
+    const newSlot: AvailabilitySlot = {
+      ...slot,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    await this.update((doc) => {
+      doc.availabilitySlots[newSlot.id] = newSlot;
+    });
+
+    return newSlot;
+  }
+
+  async updateAvailabilitySlot(id: string, updates: Partial<AvailabilitySlot>): Promise<void> {
+    await this.update((doc) => {
+      if (doc.availabilitySlots[id]) {
+        Object.assign(doc.availabilitySlots[id], updates, { updatedAt: Date.now() });
+      }
+    });
+  }
+
+  listAvailabilitySlots(): AvailabilitySlot[] {
+    return Object.values(this.getDoc().availabilitySlots);
   }
 
   // ===== Event Operations =====
@@ -1049,6 +1132,84 @@ export class LocalDatabase {
       .sort((a, b) => a.startTime - b.startTime);
   }
 
+  // ===== Contribution Tracking Operations =====
+  // REQ-TIME-002, REQ-TIME-019, REQ-TIME-020, REQ-TIME-021, REQ-TIME-022
+
+  /**
+   * Record a contribution to the community
+   */
+  async addContribution(contribution: Omit<ContributionRecord, 'id' | 'createdAt' | 'celebratedBy'>): Promise<ContributionRecord> {
+    const newContribution: ContributionRecord = {
+      ...contribution,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      celebratedBy: [],
+      visibility: contribution.visibility || 'community',
+    };
+
+    await this.update((doc) => {
+      doc.contributions[newContribution.id] = newContribution;
+    });
+
+    return newContribution;
+  }
+
+  /**
+   * Celebrate a contribution (add gratitude/recognition)
+   */
+  async celebrateContribution(contributionId: string, userId: string): Promise<void> {
+    await this.update((doc) => {
+      const contribution = doc.contributions[contributionId];
+      if (contribution && contribution.celebratedBy) {
+        if (!contribution.celebratedBy.includes(userId)) {
+          contribution.celebratedBy.push(userId);
+        }
+      }
+    });
+  }
+
+  /**
+   * List all contributions
+   */
+  listContributions(): ContributionRecord[] {
+    return Object.values(this.getDoc().contributions || {});
+  }
+
+  /**
+   * Add a burnout assessment
+   */
+  async addBurnoutAssessment(assessment: Omit<BurnoutAssessment, 'id' | 'createdAt'>): Promise<BurnoutAssessment> {
+    const newAssessment: BurnoutAssessment = {
+      ...assessment,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+    };
+
+    await this.update((doc) => {
+      doc.burnoutAssessments[newAssessment.id] = newAssessment;
+    });
+
+    return newAssessment;
+  }
+
+  /**
+   * Update a burnout assessment
+   */
+  async updateBurnoutAssessment(id: string, updates: Partial<BurnoutAssessment>): Promise<void> {
+    await this.update((doc) => {
+      if (doc.burnoutAssessments[id]) {
+        Object.assign(doc.burnoutAssessments[id], updates);
+      }
+    });
+  }
+
+  /**
+   * List all burnout assessments
+   */
+  listBurnoutAssessments(): BurnoutAssessment[] {
+    return Object.values(this.getDoc().burnoutAssessments || {});
+  }
+
   // ===== Sync Operations =====
 
   /**
@@ -1103,15 +1264,23 @@ export class LocalDatabase {
     this.doc = Automerge.from<DatabaseSchema>({
       resources: {},
       needs: {},
-      skillOffers: {},
+      skills: {},
+      availabilitySlots: {},
+      contributions: {},
       events: {},
       users: {},
-      communities: {},
-      communityGroups: {},
-      syncStatus: {
-        lastSync: 0,
-        peersConnected: 0,
-        pendingChanges: 0,
+      community: {
+        id: 'local-community',
+        name: 'Local Community',
+        description: '',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        settings: {
+          visibility: 'private',
+          allowPublicJoin: false,
+          requireApproval: true,
+        },
+        members: [],
       },
       checkIns: {},
       careCircles: {},
@@ -1120,6 +1289,10 @@ export class LocalDatabase {
       emergencyAlerts: {},
       bulletinPosts: {},
       communityEvents: {},
+      gratitude: {},
+      randomKindness: {},
+      burnoutAssessments: {},
+      participationVitality: {},
     });
     await this.save();
 

@@ -36,6 +36,18 @@ export interface Resource {
   tags?: string[];
   createdAt: number;
   updatedAt: number;
+
+  // Tool Library specific fields (REQ-SHARE-002)
+  toolLibrary?: {
+    usageInstructions?: string;
+    safetyRequirements?: string[];
+    requiredSkills?: string[];
+    capacitySpecs?: string; // e.g., "Print bed: 220x220x250mm, PLA/PETG"
+    maintenanceNotes?: string;
+    condition?: 'excellent' | 'good' | 'fair' | 'needs-repair';
+    lastMaintenanceDate?: number;
+    isCollectivelyOwned?: boolean; // REQ-SHARE-007
+  };
 }
 
 /**
@@ -62,6 +74,62 @@ export interface SkillOffer {
   description: string;
   categories: string[];
   available: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * Time range for availability slots
+ */
+export interface TimeRange {
+  startTime: string; // HH:MM format (24-hour)
+  endTime: string; // HH:MM format (24-hour)
+}
+
+/**
+ * Recurrence pattern for recurring availability
+ */
+export interface RecurrencePattern {
+  type: 'daily' | 'weekly' | 'biweekly' | 'monthly';
+  daysOfWeek?: number[]; // 0 = Sunday, 6 = Saturday (for weekly/biweekly)
+  dayOfMonth?: number; // 1-31 (for monthly)
+  endDate?: number; // When to stop recurring (optional, ongoing if not set)
+}
+
+/**
+ * Availability Slot - scheduled time when a user is available
+ * REQ-TIME-016: Communication and Confirmation
+ */
+export interface AvailabilitySlot {
+  id: string;
+  userId: string;
+  skillOfferId?: string; // Optional: link to specific skill offer
+
+  // Date/time
+  date?: number; // Unix timestamp for one-time availability
+  dateRange?: { start: number; end: number }; // For multi-day availability
+  timeRanges: TimeRange[]; // Time slots within the day(s)
+
+  // Recurrence
+  recurrence?: RecurrencePattern;
+
+  // Context
+  location?: {
+    type: 'my-place' | 'your-place' | 'community-space' | 'virtual' | 'flexible';
+    details?: string;
+  };
+
+  // Preferences
+  preferredActivityTypes: string[]; // e.g., ["tutoring", "repairs"]
+  maxBookings: number; // Limit bookings per slot
+  currentBookings: number; // Current number of bookings
+  notes?: string; // Additional info
+
+  // Visibility
+  visibility: 'public' | 'community' | 'care-circle';
+
+  // Status
+  active: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -199,6 +267,7 @@ export interface DatabaseSchema {
   resources: Record<string, Resource>;
   needs: Record<string, Need>;
   skills: Record<string, SkillOffer>;
+  availabilitySlots: Record<string, AvailabilitySlot>;
   events: Record<string, EconomicEvent>;
   users: Record<string, UserProfile>;
   community: Community;

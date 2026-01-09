@@ -143,19 +143,19 @@ For each feature: *"Does this increase community autonomy, or create new depende
 
 ### Group A: Time Bank Core (Gift Economy!)
 
-| Feature | Complexity | Liberation | Joy | Spec Reference |
-|---------|------------|------------|-----|----------------|
-| Offer skills/time | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | time-bank.md |
-| Browse available skills | Simple | ✊✊✊ | 🌻🌻🌻 | time-bank.md |
+| Feature | Complexity | Liberation | Joy | Spec Reference | Status |
+|---------|------------|------------|-----|----------------|--------|
+| Offer skills/time | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | time-bank.md | ⏳ IN PROGRESS |
+| Browse available skills | Simple | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Request help | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | time-bank.md |
 | Skills categories | Simple | ✊✊ | 🌻🌻 | time-bank.md |
 | Thank you / appreciation notes | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md |
 
 ### Group B: Scheduling & Coverage
 
-| Feature | Complexity | Liberation | Joy | Spec Reference |
-|---------|------------|------------|-----|----------------|
-| Availability calendar | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md |
+| Feature | Complexity | Liberation | Joy | Spec Reference | Status |
+|---------|------------|------------|-----|----------------|--------|
+| Availability calendar | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Schedule help sessions | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md |
 | Shift volunteering | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md |
 | Shift swapping | Medium | ✊✊✊ | 🌻🌻🌻🌻 | time-bank.md |
@@ -163,18 +163,18 @@ For each feature: *"Does this increase community autonomy, or create new depende
 
 ### Group C: Tool Library & Equipment
 
-| Feature | Complexity | Liberation | Joy | Spec Reference |
-|---------|------------|------------|-----|----------------|
-| Tool library | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | resource-sharing.md |
+| Feature | Complexity | Liberation | Joy | Spec Reference | Status |
+|---------|------------|------------|-----|----------------|--------|
+| Tool library | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | resource-sharing.md | ✅ DONE |
 | Equipment booking | Medium | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md |
 | Item pickup coordination | Medium | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md |
 | Usage guidelines per item | Simple | ✊✊ | 🌻🌻 | resource-sharing.md |
 
 ### Group D: Community Vitality (Not Debt!)
 
-| Feature | Complexity | Liberation | Joy | Spec Reference |
-|---------|------------|------------|-----|----------------|
-| Community contribution tracking | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md |
+| Feature | Complexity | Liberation | Joy | Spec Reference | Status |
+|---------|------------|------------|-----|----------------|--------|
+| Community contribution tracking | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Gratitude wall | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md |
 | "Random acts of kindness" log | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md |
 | Burnout prevention tracking | Medium | ✊✊✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md |
