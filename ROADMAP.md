@@ -125,14 +125,14 @@ For each feature: *"Does this increase community autonomy, or create new depende
 | Respond to needs | Simple | ✊✊✊✊ | 🌻🌻🌻🌻🌻 | resource-sharing.md | ✅ DONE |
 | Urgency indicators | Simple | ✊✊✊✊ | 🌻🌻🌻 | resource-sharing.md | ✅ DONE |
 
-### Group D: Community Basics - 75% Complete
+### Group D: Community Basics - 100% Complete
 
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
 | Community/group creation | Simple | ✊✊✊✊ | 🌻🌻🌻 | community-governance.md | ✅ DONE |
 | About pages & philosophy pages | Simple | ✊✊✊ | 🌻🌻🌻 | community-governance.md | ✅ DONE |
 | Community bulletin board | Simple | ✊✊✊ | 🌻🌻🌻 | community-governance.md | ✅ DONE |
-| Community events listing | Simple | ✊✊✊ | 🌻🌻🌻🌻 | community-governance.md | ⏳ IN PROGRESS |
+| Community events listing | Simple | ✊✊✊ | 🌻🌻🌻🌻 | community-governance.md | ✅ DONE |
 
 ---
 
@@ -802,6 +802,51 @@ Start here for immediate impact with minimal complexity:
 | Add tests for crypto modules | Medium | ✊✊✊✊✊ | src/crypto/*.ts |
 | Add tests for identity modules | Medium | ✊✊✊✊✊ | src/identity/*.ts |
 | Add tests for network adapters | Complex | ✊✊✊✊ | src/network/adapters/*.ts |
+
+### Group E: Fake Integrations & Stubs (Document or Implement)
+
+**Status:** These components appear functional but are incomplete, use fake implementations, or have misleading names.
+
+| Issue | Type | Liberation | Files Affected | Notes |
+|-------|------|------------|----------------|-------|
+| WebRTC Transport throws errors | Stub | ✊✊✊✊✊ | src/network/peer.ts:210-226 | Listed as preferred transport but always fails. **Fix:** Implement using simple-peer or remove as option |
+| Meshtastic Transport (peer.ts) throws errors | Stub | ✊✊✊✊✊ | src/network/peer.ts:229-246 | Always throws "not yet implemented". **Fix:** Remove or implement |
+| Meshtastic packet decoding is fake | Fake Protocol | ✊✊✊✊✊ | src/network/adapters/MeshtasticAdapter.ts:211-225 | Uses hardcoded offsets instead of Protocol Buffers. Won't decode real packets. **Fix:** Use @buf/meshtastic_protobufs or document as experimental |
+| WiFi Direct is actually BroadcastChannel | Misleading Name | ✊✊✊✊ | src/network/adapters/WiFiDirectAdapter.ts | Only works same-device cross-tab, not WiFi Direct. **Fix:** Rename to BroadcastChannelAdapter |
+| Peer discovery is a stub | Missing Core | ✊✊✊✊✊ | src/network/peer.ts:65-74 | Returns only manually-added peers, no actual discovery. **Fix:** Implement mDNS/DNS-SD or document manual peer addition |
+| Bluetooth uses JSON over BLE | Inefficient | ✊✊✊ | src/network/adapters/BluetoothAdapter.ts:281 | Uses JSON instead of efficient binary. **Fix:** Implement Protocol Buffers or MessagePack |
+| Bluetooth requires user interaction | UX Limitation | ✊✊✊ | src/network/adapters/BluetoothAdapter.ts:50-66 | Web Bluetooth API requires manual device picker. **Fix:** Document limitation or explore Termux alternatives |
+| Sync state not persisted | Data Loss | ✊✊✊✊ | src/data/document-manager.ts:217 | Always returns new state, re-downloads everything. **Fix:** Implement per-peer sync state storage |
+| DTN bundle contents ignored | Incomplete | ✊✊✊✊ | src/network/dtn/DTNManager.ts:160 | Store-and-forward exists but doesn't process bundles. **Fix:** Implement bundle content handling |
+| Mock data in production files | Confusion Risk | ✊✊ | src/resources/resource-status-example.ts:34-41 | Example files with `mock-public-key-1` could confuse developers. **Fix:** Move to tests/ or add clear warnings |
+| Hardcoded "Anonymous" display names | Missing Integration | ✊✊✊ | src/network/NetworkManager.ts:235, SecureNetworkManager.ts:207 | All network announcements use "Anonymous". **Fix:** Integrate with user profiles |
+| Private keys unprotected in memory | Security | ✊✊✊✊✊ | src/identity/identity-service.ts:71 | Keys stored without additional protection. **Fix:** Add memory encryption or secure enclave on supported platforms |
+
+**Action Items:**
+
+1. **Immediate (Security/Functionality):**
+   - Replace XOR encryption (Group A)
+   - Fix WebRTC transport or remove it
+   - Document Meshtastic adapter as experimental/incomplete
+   - Rename WiFi Direct to BroadcastChannel adapter
+
+2. **Short-term (Core Features):**
+   - Implement real peer discovery or document manual process
+   - Implement sync state persistence
+   - Complete DTN bundle handling
+   - Wire up display names from user profiles
+
+3. **Medium-term (Quality):**
+   - Upgrade Bluetooth to binary protocol
+   - Implement real Meshtastic Protocol Buffer support
+   - Add secure memory handling for private keys
+   - Move mock data to test fixtures
+
+4. **Documentation (Immediate):**
+   - Add prominent README section: "Production Ready vs Experimental Features"
+   - Mark WebRTC, Meshtastic decoding, and WiFi Direct as experimental
+   - Document Bluetooth UX limitations (manual pairing required)
+   - Document that peer discovery requires manual peer addition currently
 
 ---
 
