@@ -71,7 +71,7 @@ npm install
 ### 4. Login to Claude Code
 
 ```bash
-claude-code login
+claude login
 ```
 
 Follow prompts to login with your Anthropic account (no API key needed).
@@ -79,7 +79,7 @@ Follow prompts to login with your Anthropic account (no API key needed).
 ### 5. Start Development
 
 ```bash
-claude-code
+claude
 ```
 
 ## Managing Your VM

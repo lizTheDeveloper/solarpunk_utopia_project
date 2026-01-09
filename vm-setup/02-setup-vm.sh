@@ -39,12 +39,12 @@ git --version
 # Install Claude Code CLI
 echo ""
 echo "Installing Claude Code..."
-npm install -g @anthropic/claude-code
+sudo npm install -g @anthropic-ai/claude-code
 
 # Verify Claude Code installation
 echo ""
 echo "Verifying Claude Code installation..."
-claude-code --version
+claude --version
 
 echo ""
 echo "=========================================="
@@ -54,4 +54,4 @@ echo ""
 echo "Next steps:"
 echo "1. Set up GitHub SSH keys: bash 03-setup-github.sh"
 echo "2. Clone your repository: bash 04-migrate-repo.sh"
-echo "3. Log in to Claude Code: claude-code login"
+echo "3. Log in to Claude Code: claude login"

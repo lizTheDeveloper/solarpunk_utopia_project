@@ -104,7 +104,7 @@ This will:
 
 ```bash
 cd ~/solarpunk_utopia_project
-claude-code login
+claude login
 ```
 
 Follow the prompts to log in with your Anthropic account (no API key needed).
@@ -112,7 +112,7 @@ Follow the prompts to log in with your Anthropic account (no API key needed).
 ## Step 7: Start Development (Run on the VM)
 
 ```bash
-claude-code
+claude
 ```
 
 Welcome to your renewable-energy-powered development environment! ✊🌻
