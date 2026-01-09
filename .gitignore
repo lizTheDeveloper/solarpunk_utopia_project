@@ -54,9 +54,3 @@ restart-all-with-resume.sh
 stop-all-orchestrators.sh
 monitor-and-restart.sh
 check-parallel-status.sh
-
-# Generated reports
-AGENT_CODE_REVIEW_CHECKLIST.md
-FINAL_STATUS.md
-REVIEW_REPORT_*.md
-TECH_DEBT_REPORT.md
