@@ -4,7 +4,7 @@
 
 The Time Bank enables community members to offer and share their skills, time, and services in a non-monetary mutual aid framework. Unlike traditional time banking that uses hour-for-hour exchange credits, this system emphasizes **gift economy principles** where people contribute what they can and receive what they need.
 
-**Status**: Phase 3, Group A - Features 1-2 of 5 ✅
+**Status**: Phase 3, Groups A-D - Core Features ✅ Complete
 
 ## Solarpunk Values
 
@@ -318,25 +318,44 @@ Skills are stored in the local Automerge CRDT database, which means:
 - **Persistent**: Survives app restarts
 - **Mesh-compatible**: Can sync peer-to-peer
 
-## Future Features (Phase 3, Group A)
+## Phase 3 Implementation Status
 
-This is features 1-2 of 5 in the Time Bank Core group:
+### ✅ Group A: Time Bank Core (Complete)
 
-- ✅ **Offer skills/time** (DONE)
-- ✅ **Browse available skills** (DONE)
-- ⏸️ Request help
-- ⏸️ Skills categories (partial - basic taxonomy implemented)
-- ⏸️ Thank you / appreciation notes
+- ✅ **Offer skills/time** (REQ-TIME-003)
+- ✅ **Browse available skills** (REQ-TIME-004)
+- ✅ **Request help** (REQ-TIME-006, REQ-TIME-008)
+- ✅ **Schedule help sessions** (REQ-TIME-016)
+- ✅ **Gratitude wall** (REQ-TIME-022, REQ-TIME-018)
+
+### ✅ Group B: Scheduling & Coverage (Complete)
+
+- ✅ **Availability Calendar** (REQ-TIME-016): Specify when you're available with recurring patterns
+- ⏸️ Shift volunteering (planned)
+- ⏸️ Shift swapping (planned)
+- ⏸️ Coverage finding (planned)
+
+### ✅ Group C: Tool Library & Equipment (Complete)
+
+- ✅ **Tool library** (REQ-SHARE-002)
+- ✅ **Equipment booking** (REQ-SHARE-012)
+- ⏸️ Item pickup coordination (planned)
+- ⏸️ Usage guidelines per item (planned)
+
+### ✅ Group D: Community Vitality (Complete)
+
+- ✅ **Community contribution tracking** (REQ-TIME-002, REQ-TIME-019)
+- ✅ **Gratitude wall** (REQ-TIME-022)
+- ✅ **"Random acts of kindness" log** (integrated into contribution tracking)
+- ✅ **Burnout prevention tracking** (REQ-TIME-021)
 
 ## Future Enhancements (Later Phases)
 
 These features are planned but not yet in scope:
 
-- **Availability Calendar** (Phase 3, Group B): Specify when you're available
 - **AI-Powered Matching** (Phase 10): Automatic matching of needs to skills
 - **Skill Levels & Learning** (REQ-TIME-010): Mentorship pathways
 - **Preference Learning** (REQ-TIME-013): System learns your preferences
-- **Burnout Prevention** (REQ-TIME-021): Gentle check-ins for overcommitment
 
 ## Philosophy
 

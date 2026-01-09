@@ -170,14 +170,14 @@ For each feature: *"Does this increase community autonomy, or create new depende
 | Item pickup coordination | Medium | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md |
 | Usage guidelines per item | Simple | ✊✊ | 🌻🌻 | resource-sharing.md |
 
-### Group D: Community Vitality (Not Debt!)
+### Group D: Community Vitality (Not Debt!) - 100% Complete
 
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
 | Community contribution tracking | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Gratitude wall | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md | ✅ DONE |
-| "Random acts of kindness" log | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md |
-| Burnout prevention tracking | Medium | ✊✊✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md |
+| "Random acts of kindness" log | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md | ✅ DONE |
+| Burnout prevention tracking | Medium | ✊✊✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md | ✅ DONE |
 
 ---
 
