@@ -145,7 +145,7 @@ For each feature: *"Does this increase community autonomy, or create new depende
 
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
-| Offer skills/time | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | time-bank.md | ⏳ IN PROGRESS |
+| Offer skills/time | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Browse available skills | Simple | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Request help | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | time-bank.md |
 | Skills categories | Simple | ✊✊ | 🌻🌻 | time-bank.md |
