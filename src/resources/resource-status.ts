@@ -34,13 +34,23 @@ export async function markResourceClaimed(
 
   // Optionally record the claim event
   if (claimedBy) {
-    await db.recordEvent({
+    const eventData: {
+      action: 'transfer';
+      providerId: string;
+      receiverId: string;
+      resourceId: string;
+      note?: string;
+    } = {
       action: 'transfer',
       providerId: resource.ownerId,
       receiverId: claimedBy,
       resourceId: resource.id,
-      note: note,
-    });
+    };
+    // Only include note if provided (Automerge doesn't accept undefined)
+    if (note !== undefined) {
+      eventData.note = note;
+    }
+    await db.recordEvent(eventData);
   }
 }
 
@@ -68,13 +78,23 @@ export async function markResourceAvailable(
 
   // Optionally record the return event
   if (returnedBy) {
-    await db.recordEvent({
+    const eventData: {
+      action: 'return';
+      providerId: string;
+      receiverId: string;
+      resourceId: string;
+      note?: string;
+    } = {
       action: 'return',
       providerId: returnedBy,
       receiverId: resource.ownerId,
       resourceId: resource.id,
-      note: note,
-    });
+    };
+    // Only include note if provided (Automerge doesn't accept undefined)
+    if (note !== undefined) {
+      eventData.note = note;
+    }
+    await db.recordEvent(eventData);
   }
 }
 
