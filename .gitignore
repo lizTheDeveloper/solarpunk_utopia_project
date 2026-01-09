@@ -47,7 +47,6 @@ orchestrator-summary.txt
 
 # Generated scripts (orchestrators, monitoring)
 orchestrator.sh
-orchestrator-group.sh
 launch-4-orchestrators.sh
 run-parallel-orchestrators.sh
 restart-all-with-resume.sh
