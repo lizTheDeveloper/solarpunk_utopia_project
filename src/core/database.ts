@@ -7,7 +7,7 @@
 
 import * as Automerge from '@automerge/automerge';
 import { openDB, type IDBPDatabase } from 'idb';
-import type { DatabaseSchema, Resource, Need, SkillOffer, EconomicEvent, UserProfile, Community, SyncStatus, CheckIn, CheckInStatus, CareCircle, MissedCheckInAlert } from '../types';
+import type { DatabaseSchema, Resource, Need, SkillOffer, EconomicEvent, UserProfile, Community, SyncStatus, CheckIn, CheckInStatus, CareCircle, MissedCheckInAlert, EmergencyAlert } from '../types';
 
 const DB_NAME = 'solarpunk-utopia';
 const DB_VERSION = 1;
@@ -78,6 +78,14 @@ export class LocalDatabase {
         });
         await this.save();
       }
+
+      // Migrate: Add emergencyAlerts if it doesn't exist
+      if (!this.doc.emergencyAlerts) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.emergencyAlerts = {};
+        });
+        await this.save();
+      }
     } else {
       // Create new document with initial schema
       this.doc = Automerge.from<DatabaseSchema>({
@@ -96,6 +104,7 @@ export class LocalDatabase {
         checkIns: {},
         careCircles: {},
         missedCheckInAlerts: {},
+        emergencyAlerts: {},
       });
       await this.save();
     }
@@ -299,8 +308,16 @@ export class LocalDatabase {
       createdAt: Date.now(),
     };
 
+    // Remove undefined values for Automerge compatibility
     await this.update((doc) => {
-      doc.checkIns[newCheckIn.id] = newCheckIn;
+      const checkInData: any = { ...newCheckIn };
+      // Remove undefined fields
+      Object.keys(checkInData).forEach(key => {
+        if (checkInData[key] === undefined) {
+          delete checkInData[key];
+        }
+      });
+      doc.checkIns[newCheckIn.id] = checkInData;
     });
 
     return newCheckIn;
@@ -309,7 +326,19 @@ export class LocalDatabase {
   async updateCheckIn(id: string, updates: Partial<CheckIn>): Promise<void> {
     await this.update((doc) => {
       if (doc.checkIns[id]) {
-        Object.assign(doc.checkIns[id], updates);
+        // Manually assign each property to avoid Automerge reference errors
+        Object.keys(updates).forEach(key => {
+          const value = (updates as any)[key];
+          if (value !== undefined) {
+            if (Array.isArray(value)) {
+              // For arrays, clear and push items to avoid reference errors
+              (doc.checkIns[id] as any)[key].length = 0;
+              value.forEach((item: any) => (doc.checkIns[id] as any)[key].push(item));
+            } else {
+              (doc.checkIns[id] as any)[key] = value;
+            }
+          }
+        });
       }
     });
   }
@@ -417,8 +446,16 @@ export class LocalDatabase {
       id: crypto.randomUUID(),
     };
 
+    // Remove undefined values for Automerge compatibility
     await this.update((doc) => {
-      doc.missedCheckInAlerts[newAlert.id] = newAlert;
+      const alertData: any = { ...newAlert };
+      // Remove undefined fields
+      Object.keys(alertData).forEach(key => {
+        if (alertData[key] === undefined) {
+          delete alertData[key];
+        }
+      });
+      doc.missedCheckInAlerts[newAlert.id] = alertData;
     });
 
     return newAlert;
@@ -427,7 +464,19 @@ export class LocalDatabase {
   async updateMissedCheckInAlert(id: string, updates: Partial<MissedCheckInAlert>): Promise<void> {
     await this.update((doc) => {
       if (doc.missedCheckInAlerts[id]) {
-        Object.assign(doc.missedCheckInAlerts[id], updates);
+        // Manually assign each property to avoid Automerge reference errors
+        Object.keys(updates).forEach(key => {
+          const value = (updates as any)[key];
+          if (value !== undefined) {
+            if (Array.isArray(value)) {
+              // For arrays, clear and push items to avoid reference errors
+              (doc.missedCheckInAlerts[id] as any)[key].length = 0;
+              value.forEach((item: any) => (doc.missedCheckInAlerts[id] as any)[key].push(item));
+            } else {
+              (doc.missedCheckInAlerts[id] as any)[key] = value;
+            }
+          }
+        });
       }
     });
   }
@@ -457,6 +506,64 @@ export class LocalDatabase {
    */
   getActiveAlerts(): MissedCheckInAlert[] {
     return this.listMissedCheckInAlerts().filter(alert => !alert.acknowledged);
+  }
+
+  // ===== Emergency Alert Operations =====
+  // REQ-CARE-002: Emergency Alert System
+
+  async addEmergencyAlert(alert: Omit<EmergencyAlert, 'id'>): Promise<EmergencyAlert> {
+    const newAlert: EmergencyAlert = {
+      ...alert,
+      id: crypto.randomUUID(),
+    };
+
+    await this.update((doc) => {
+      doc.emergencyAlerts[newAlert.id] = newAlert;
+    });
+
+    return newAlert;
+  }
+
+  async updateEmergencyAlert(id: string, updates: Partial<EmergencyAlert>): Promise<void> {
+    await this.update((doc) => {
+      if (doc.emergencyAlerts[id]) {
+        Object.assign(doc.emergencyAlerts[id], updates);
+      }
+    });
+  }
+
+  getEmergencyAlert(id: string): EmergencyAlert | undefined {
+    return this.getDoc().emergencyAlerts[id];
+  }
+
+  listEmergencyAlerts(): EmergencyAlert[] {
+    return Object.values(this.getDoc().emergencyAlerts);
+  }
+
+  /**
+   * Get active (unresolved) emergency alerts
+   */
+  getActiveEmergencyAlerts(): EmergencyAlert[] {
+    return this.listEmergencyAlerts().filter(alert => !alert.resolved);
+  }
+
+  /**
+   * Get emergency alerts for care circles the user is a member of
+   */
+  getEmergencyAlertsForMember(memberId: string): EmergencyAlert[] {
+    const careCircles = this.getCareCirclesForMember(memberId);
+    const careCircleIds = new Set(careCircles.map(cc => cc.id));
+
+    return this.listEmergencyAlerts().filter(alert =>
+      careCircleIds.has(alert.careCircleId) && !alert.resolved
+    );
+  }
+
+  /**
+   * Get emergency alert history for a user
+   */
+  getUserEmergencyAlerts(userId: string): EmergencyAlert[] {
+    return this.listEmergencyAlerts().filter(alert => alert.userId === userId);
   }
 
   // ===== Sync Operations =====

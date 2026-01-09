@@ -172,15 +172,21 @@ export async function setupCareCircle(
     return db.getCareCircle(existing.id)!;
   } else {
     // Create new care circle with defaults
-    return await db.addCareCircle({
+    const careCircleData: any = {
       userId,
       members,
       checkInEnabled: options.checkInEnabled ?? true,
-      preferredCheckInTime: options.preferredCheckInTime,
       checkInFrequency: options.checkInFrequency ?? 'daily',
       missedCheckInThreshold: options.missedCheckInThreshold ?? 26, // 26 hours = more than a day
       escalationThreshold: options.escalationThreshold ?? 2, // Escalate after 2 missed check-ins
-    });
+    };
+
+    // Only add preferredCheckInTime if it's defined (Automerge doesn't accept undefined)
+    if (options.preferredCheckInTime !== undefined) {
+      careCircleData.preferredCheckInTime = options.preferredCheckInTime;
+    }
+
+    return await db.addCareCircle(careCircleData);
   }
 }
 

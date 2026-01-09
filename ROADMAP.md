@@ -96,14 +96,14 @@ For each feature: *"Does this increase community autonomy, or create new depende
 
 **The Test**: Can someone with no technical skills start using this in 5 minutes and feel helped within a day?
 
-### Group A: Community Check-ins (Care First!) - 60% Complete
+### Group A: Community Check-ins (Care First!) - 80% Complete
 
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
 | Daily check-in prompts | Simple | ✊✊✊ | 🌻🌻🌻🌻 | community-care.md | ✅ DONE |
 | "I'm okay" / "Need support" buttons | Simple | ✊✊✊✊ | 🌻🌻🌻🌻🌻 | community-care.md | ✅ DONE |
 | Missed check-in alerts | Medium | ✊✊✊✊ | 🌻🌻🌻🌻 | community-care.md | ✅ DONE |
-| Emergency contact circles | Simple | ✊✊✊✊✊ | 🌻🌻🌻 | community-care.md | |
+| Emergency contact circles | Simple | ✊✊✊✊✊ | 🌻🌻🌻 | community-care.md | ✅ DONE |
 | Care circle formation | Medium | ✊✊✊✊ | 🌻🌻🌻🌻🌻 | community-care.md | |
 
 ### Group B: Simple Resource Sharing (Buy Nothing!)

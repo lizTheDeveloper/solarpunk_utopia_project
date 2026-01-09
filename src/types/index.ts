@@ -72,7 +72,7 @@ export interface SkillOffer {
  */
 export interface EconomicEvent {
   id: string;
-  action: 'give' | 'transfer' | 'lend' | 'return' | 'use' | 'work';
+  action: 'give' | 'transfer' | 'lend' | 'return' | 'use' | 'work' | 'emergency-alert';
   providerId: string;
   receiverId: string;
   resourceId: string;
@@ -134,6 +134,7 @@ export interface DatabaseSchema {
   checkIns: Record<string, CheckIn>;
   careCircles: Record<string, CareCircle>;
   missedCheckInAlerts: Record<string, MissedCheckInAlert>;
+  emergencyAlerts: Record<string, EmergencyAlert>;
 }
 
 /**
@@ -196,4 +197,33 @@ export interface MissedCheckInAlert {
   escalated: boolean;
   acknowledged: boolean;
   acknowledgedBy?: string[];
+}
+
+/**
+ * Emergency Alert - REQ-CARE-002: Emergency Alert System
+ * Allows vulnerable members to quickly alert their care network
+ */
+export interface EmergencyAlert {
+  id: string;
+  userId: string; // Person triggering the emergency
+  careCircleId: string;
+  message?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+  severity: 'urgent' | 'emergency';
+  contactEmergencyServices: boolean;
+  triggeredAt: number;
+  resolved: boolean;
+  resolvedAt?: number;
+  resolvedBy?: string;
+  resolution?: string;
+  responses: Array<{
+    responderId: string;
+    timestamp: number;
+    message?: string;
+    eta?: number; // Estimated time of arrival in minutes
+    status: 'on-way' | 'contacted' | 'arrived' | 'resolved';
+  }>;
 }
