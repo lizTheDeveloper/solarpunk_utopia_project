@@ -106,14 +106,14 @@ For each feature: *"Does this increase community autonomy, or create new depende
 | Emergency contact circles | Simple | ✊✊✊✊✊ | 🌻🌻🌻 | community-care.md | ✅ DONE |
 | Care circle formation | Medium | ✊✊✊✊ | 🌻🌻🌻🌻🌻 | community-care.md | ✅ DONE |
 
-### Group B: Simple Resource Sharing (Buy Nothing!)
+### Group B: Simple Resource Sharing (Buy Nothing!) - 100% Complete
 
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
-| Post items to share/give | Simple | ✊✊✊ | 🌻🌻🌻🌻 | resource-sharing.md | ⏳ IN PROGRESS |
-| Browse available items | Simple | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md | ⏳ IN PROGRESS |
-| Request items | Simple | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md | ⏳ IN PROGRESS |
-| Photo uploads for items | Simple | ✊✊ | 🌻🌻🌻 | resource-sharing.md | ⏳ IN PROGRESS |
+| Post items to share/give | Simple | ✊✊✊ | 🌻🌻🌻🌻 | resource-sharing.md | ✅ DONE |
+| Browse available items | Simple | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md | ✅ DONE |
+| Request items | Simple | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md | ✅ DONE |
+| Photo uploads for items | Simple | ✊✊ | 🌻🌻🌻 | resource-sharing.md | ✅ DONE |
 | "Claimed" / "Available" status | Simple | ✊✊✊ | 🌻🌻 | resource-sharing.md | ✅ DONE |
 
 ### Group C: Open Requests & Needs - 100% Complete
@@ -125,14 +125,14 @@ For each feature: *"Does this increase community autonomy, or create new depende
 | Respond to needs | Simple | ✊✊✊✊ | 🌻🌻🌻🌻🌻 | resource-sharing.md | ✅ DONE |
 | Urgency indicators | Simple | ✊✊✊✊ | 🌻🌻🌻 | resource-sharing.md | ✅ DONE |
 
-### Group D: Community Basics - 50% Complete
+### Group D: Community Basics - 75% Complete
 
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
 | Community/group creation | Simple | ✊✊✊✊ | 🌻🌻🌻 | community-governance.md | ✅ DONE |
 | About pages & philosophy pages | Simple | ✊✊✊ | 🌻🌻🌻 | community-governance.md | ✅ DONE |
-| Community bulletin board | Simple | ✊✊✊ | 🌻🌻🌻 | community-governance.md | |
-| Community events listing | Simple | ✊✊✊ | 🌻🌻🌻🌻 | community-governance.md | |
+| Community bulletin board | Simple | ✊✊✊ | 🌻🌻🌻 | community-governance.md | ✅ DONE |
+| Community events listing | Simple | ✊✊✊ | 🌻🌻🌻🌻 | community-governance.md | ⏳ IN PROGRESS |
 
 ---
 
@@ -757,6 +757,51 @@ Start here for immediate impact with minimal complexity:
 
 **Team Kappa**: Solidarity (Phases 14, 15, 16)
 - Housing, movements, future features
+
+---
+
+## Priority 0: Tech Debt Remediation
+*Critical fixes before continuing new feature development*
+
+**Why Priority 0?** Parallel agent development has accumulated technical debt that, if left unchecked, will undermine the platform's core values of security, privacy, and reliability. These issues must be addressed to maintain the foundation.
+
+**Reference:** See `TECH_DEBT_REPORT.md` for full details and `AGENT_CODE_REVIEW_CHECKLIST.md` for prevention guidelines.
+
+### Group A: Security Critical (Fix Immediately)
+
+| Issue | Complexity | Liberation | Files Affected |
+|-------|------------|------------|----------------|
+| Replace XOR encryption with XChaCha20-Poly1305 | Medium | ✊✊✊✊✊ | src/crypto/keys.ts |
+| Secure private key storage at rest | Medium | ✊✊✊✊✊ | src/identity/identity-service.ts |
+| Fix hardcoded `user-1` with auth context | Simple | ✊✊✊✊ | src/main.ts, src/care/check-in.ts, src/resources/browse-needs.ts |
+
+### Group B: Functionality Critical
+
+| Issue | Complexity | Liberation | Files Affected |
+|-------|------------|------------|----------------|
+| Implement sync status tracking | Medium | ✊✊✊ | src/core/database.ts |
+| Add missing deleteUserProfile database method | Simple | ✊✊✊ | src/core/database.ts |
+| Complete DTN bundle handling | Medium | ✊✊✊✊ | src/network/dtn/DTNManager.ts |
+| Complete peer discovery implementation | Medium | ✊✊✊✊ | src/network/peer.ts |
+
+### Group C: Type Safety & Quality
+
+| Issue | Complexity | Liberation | Files Affected |
+|-------|------------|------------|----------------|
+| Reduce `any` type usage (117 occurrences) | Medium | ✊✊✊ | 43 files |
+| Create typed utilities for Automerge operations | Medium | ✊✊✊ | New utility file |
+| Implement structured logging (replace 649 console.* calls) | Medium | ✊✊ | 44 files |
+| Deprecate duplicate JS implementation | Simple | ✊✊ | platform/ directory |
+
+### Group D: Test Coverage
+
+| Issue | Complexity | Liberation | Files Affected |
+|-------|------------|------------|----------------|
+| Add tests for NetworkManager | Medium | ✊✊✊✊ | src/network/NetworkManager.ts |
+| Add tests for SecureNetworkManager | Medium | ✊✊✊✊ | src/network/SecureNetworkManager.ts |
+| Add tests for crypto modules | Medium | ✊✊✊✊✊ | src/crypto/*.ts |
+| Add tests for identity modules | Medium | ✊✊✊✊✊ | src/identity/*.ts |
+| Add tests for network adapters | Complex | ✊✊✊✊ | src/network/adapters/*.ts |
 
 ---
 

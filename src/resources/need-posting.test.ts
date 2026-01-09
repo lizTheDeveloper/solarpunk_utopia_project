@@ -4,7 +4,7 @@
  * REQ-SHARE-001: Physical Items (Buy-Nothing)
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { LocalDatabase } from '../core/database';
 import { NeedPosting } from './need-posting';
 import type { Need } from '../types';
@@ -174,8 +174,9 @@ describe('NeedPosting', () => {
       });
 
       const allNeeds = db.listNeeds();
+      // HTML tags should be escaped to prevent XSS
       expect(allNeeds[0].description).not.toContain('<b>');
-      expect(allNeeds[0].description).toContain('Bold text');
+      expect(allNeeds[0].description).toContain('&lt;b&gt;Bold&lt;/b&gt;');
     });
   });
 

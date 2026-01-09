@@ -282,12 +282,13 @@ function showResponseDialog(needId: string, need: Need, userId: string) {
 
     try {
       // Record the response as an economic event
+      // Note: message is sanitized before storage to prevent XSS
       await db.recordEvent({
         action: 'give',
         providerId: userId,
         receiverId: need.userId,
         resourceId: needId,
-        note: message,
+        note: sanitizeUserContent(message),
       });
 
       alert('Your response has been sent! The community member will be notified.');
@@ -316,12 +317,17 @@ function showResponseDialog(needId: string, need: Need, userId: string) {
 
 /**
  * Render the entire browse needs view
+ *
+ * @param userId - The current user ID from the identity/auth system
+ * @throws Error if userId is not provided
  */
-export function renderBrowseNeedsView() {
+export function renderBrowseNeedsView(userId: string) {
+  if (!userId || !validateIdentifier(userId)) {
+    throw new Error('Valid user ID is required to render browse needs view');
+  }
+
   const container = document.getElementById('needs-view');
   if (!container) return;
-
-  const userId = 'user-1'; // TODO: Get from auth
 
   container.innerHTML = renderBrowseNeeds();
   initBrowseNeedsHandlers(userId);

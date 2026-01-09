@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { LocalDatabase } from '../core/database';
+import { db } from '../core/database';
 import {
   markResourceClaimed,
   markResourceAvailable,
@@ -15,22 +15,16 @@ import {
   getUserClaimedResources,
 } from './resource-status';
 
-// Mock database
-let testDb: LocalDatabase;
-
 beforeEach(async () => {
-  testDb = new LocalDatabase('test-resource-status');
-  await testDb.init();
-
-  // Set global db for tests
-  (global as any).db = testDb;
+  // Reset database before each test to ensure clean state
+  await db.reset();
 });
 
 describe('Resource Status Management', () => {
   describe('markResourceClaimed', () => {
     it('should mark a resource as claimed (not available)', async () => {
       // Add a test resource
-      const resource = await testDb.addResource({
+      const resource = await db.addResource({
         name: 'Hand Drill',
         description: 'A good quality hand drill',
         resourceType: 'tool',
@@ -43,12 +37,12 @@ describe('Resource Status Management', () => {
       await markResourceClaimed(resource.id, 'user-2');
 
       // Verify status
-      const updated = testDb.getResource(resource.id);
+      const updated = db.getResource(resource.id);
       expect(updated?.available).toBe(false);
     });
 
     it('should record a transfer event when claimed', async () => {
-      const resource = await testDb.addResource({
+      const resource = await db.addResource({
         name: 'Saw',
         description: 'Hand saw',
         resourceType: 'tool',
@@ -60,7 +54,7 @@ describe('Resource Status Management', () => {
       await markResourceClaimed(resource.id, 'user-2', 'Borrowing for weekend project');
 
       // Check that event was recorded
-      const events = testDb.listEvents();
+      const events = db.listEvents();
       const claimEvent = events.find(
         e => e.resourceId === resource.id && e.action === 'transfer'
       );
@@ -75,7 +69,7 @@ describe('Resource Status Management', () => {
   describe('markResourceAvailable', () => {
     it('should mark a resource as available', async () => {
       // Add a claimed resource
-      const resource = await testDb.addResource({
+      const resource = await db.addResource({
         name: 'Ladder',
         description: '10-foot ladder',
         resourceType: 'tool',
@@ -88,12 +82,12 @@ describe('Resource Status Management', () => {
       await markResourceAvailable(resource.id, 'user-2');
 
       // Verify status
-      const updated = testDb.getResource(resource.id);
+      const updated = db.getResource(resource.id);
       expect(updated?.available).toBe(true);
     });
 
     it('should record a return event when made available', async () => {
-      const resource = await testDb.addResource({
+      const resource = await db.addResource({
         name: 'Ladder',
         description: '10-foot ladder',
         resourceType: 'tool',
@@ -105,7 +99,7 @@ describe('Resource Status Management', () => {
       await markResourceAvailable(resource.id, 'user-2', 'Thanks for lending!');
 
       // Check that event was recorded
-      const events = testDb.listEvents();
+      const events = db.listEvents();
       const returnEvent = events.find(
         e => e.resourceId === resource.id && e.action === 'return'
       );
@@ -119,7 +113,7 @@ describe('Resource Status Management', () => {
 
   describe('toggleResourceAvailability', () => {
     it('should toggle from available to claimed', async () => {
-      const resource = await testDb.addResource({
+      const resource = await db.addResource({
         name: 'Bicycle',
         description: 'Mountain bike',
         resourceType: 'other',
@@ -131,11 +125,11 @@ describe('Resource Status Management', () => {
       const newStatus = await toggleResourceAvailability(resource.id, 'user-2');
 
       expect(newStatus).toBe(false);
-      expect(testDb.getResource(resource.id)?.available).toBe(false);
+      expect(db.getResource(resource.id)?.available).toBe(false);
     });
 
     it('should toggle from claimed to available', async () => {
-      const resource = await testDb.addResource({
+      const resource = await db.addResource({
         name: 'Bicycle',
         description: 'Mountain bike',
         resourceType: 'other',
@@ -147,13 +141,13 @@ describe('Resource Status Management', () => {
       const newStatus = await toggleResourceAvailability(resource.id, 'user-2');
 
       expect(newStatus).toBe(true);
-      expect(testDb.getResource(resource.id)?.available).toBe(true);
+      expect(db.getResource(resource.id)?.available).toBe(true);
     });
   });
 
   describe('getAvailableResources', () => {
     it('should return only available resources', async () => {
-      await testDb.addResource({
+      await db.addResource({
         name: 'Available Tool 1',
         description: 'Test',
         resourceType: 'tool',
@@ -162,7 +156,7 @@ describe('Resource Status Management', () => {
         ownerId: 'user-1',
       });
 
-      await testDb.addResource({
+      await db.addResource({
         name: 'Claimed Tool',
         description: 'Test',
         resourceType: 'tool',
@@ -171,7 +165,7 @@ describe('Resource Status Management', () => {
         ownerId: 'user-1',
       });
 
-      await testDb.addResource({
+      await db.addResource({
         name: 'Available Tool 2',
         description: 'Test',
         resourceType: 'tool',
@@ -189,7 +183,7 @@ describe('Resource Status Management', () => {
 
   describe('getClaimedResources', () => {
     it('should return only claimed resources', async () => {
-      await testDb.addResource({
+      await db.addResource({
         name: 'Available Tool',
         description: 'Test',
         resourceType: 'tool',
@@ -198,7 +192,7 @@ describe('Resource Status Management', () => {
         ownerId: 'user-1',
       });
 
-      await testDb.addResource({
+      await db.addResource({
         name: 'Claimed Tool 1',
         description: 'Test',
         resourceType: 'tool',
@@ -207,7 +201,7 @@ describe('Resource Status Management', () => {
         ownerId: 'user-1',
       });
 
-      await testDb.addResource({
+      await db.addResource({
         name: 'Claimed Tool 2',
         description: 'Test',
         resourceType: 'tool',
@@ -225,7 +219,7 @@ describe('Resource Status Management', () => {
 
   describe('getUserAvailableResources', () => {
     it('should return only available resources for a specific user', async () => {
-      await testDb.addResource({
+      await db.addResource({
         name: 'User 1 Available',
         description: 'Test',
         resourceType: 'tool',
@@ -234,7 +228,7 @@ describe('Resource Status Management', () => {
         ownerId: 'user-1',
       });
 
-      await testDb.addResource({
+      await db.addResource({
         name: 'User 1 Claimed',
         description: 'Test',
         resourceType: 'tool',
@@ -243,7 +237,7 @@ describe('Resource Status Management', () => {
         ownerId: 'user-1',
       });
 
-      await testDb.addResource({
+      await db.addResource({
         name: 'User 2 Available',
         description: 'Test',
         resourceType: 'tool',
@@ -263,7 +257,7 @@ describe('Resource Status Management', () => {
 
   describe('getUserClaimedResources', () => {
     it('should return only claimed resources for a specific user', async () => {
-      await testDb.addResource({
+      await db.addResource({
         name: 'User 1 Available',
         description: 'Test',
         resourceType: 'tool',
@@ -272,7 +266,7 @@ describe('Resource Status Management', () => {
         ownerId: 'user-1',
       });
 
-      await testDb.addResource({
+      await db.addResource({
         name: 'User 1 Claimed',
         description: 'Test',
         resourceType: 'tool',
@@ -281,7 +275,7 @@ describe('Resource Status Management', () => {
         ownerId: 'user-1',
       });
 
-      await testDb.addResource({
+      await db.addResource({
         name: 'User 2 Claimed',
         description: 'Test',
         resourceType: 'tool',
@@ -306,14 +300,35 @@ describe('Resource Status Management', () => {
       ).rejects.toThrow('Resource not found');
     });
 
-    it('should handle resources with no owner gracefully', async () => {
-      const resource = await testDb.addResource({
-        name: 'Orphan Resource',
+    it('should throw error for invalid resource ID', async () => {
+      await expect(
+        markResourceClaimed('<script>alert(1)</script>', 'user-1')
+      ).rejects.toThrow('Resource ID contains invalid characters');
+    });
+
+    it('should throw error for invalid claimer ID', async () => {
+      const resource = await db.addResource({
+        name: 'Test Resource',
         description: 'Test',
         resourceType: 'tool',
         shareMode: 'lend',
         available: true,
-        ownerId: '',
+        ownerId: 'user-1',
+      });
+
+      await expect(
+        markResourceClaimed(resource.id, '<invalid>')
+      ).rejects.toThrow('Claimer ID contains invalid characters');
+    });
+
+    it('should handle resources with valid owner', async () => {
+      const resource = await db.addResource({
+        name: 'Valid Resource',
+        description: 'Test',
+        resourceType: 'tool',
+        shareMode: 'lend',
+        available: true,
+        ownerId: 'user-owner',
       });
 
       await expect(

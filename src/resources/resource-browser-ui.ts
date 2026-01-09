@@ -14,7 +14,7 @@
 import { ResourceBrowser, type ResourceFilter, type ResourceSearchResult } from './resource-browser';
 import type { Resource, ResourceType, ShareMode } from '../types';
 import { LocalDatabase } from '../core/database';
-import { sanitizeHtml } from '../utils/sanitize';
+import { sanitizeUserContent } from '../utils/sanitize';
 
 export interface ResourceBrowserUIOptions {
   containerId: string;
@@ -245,22 +245,22 @@ export class ResourceBrowserUI {
 
     card.innerHTML = `
       <div class="resource-card-header">
-        <h3 class="resource-name">${sanitizeHtml(resource.name)}</h3>
+        <h3 class="resource-name">${sanitizeUserContent(resource.name)}</h3>
         <span class="resource-status resource-status-${statusClass}">${statusText}</span>
       </div>
       <div class="resource-meta">
         <span class="resource-type">${this.formatResourceType(resource.resourceType)}</span>
         <span class="resource-share-mode">${shareModeText}</span>
       </div>
-      <p class="resource-description">${sanitizeHtml(resource.description)}</p>
+      <p class="resource-description">${sanitizeUserContent(resource.description)}</p>
       ${distanceHtml}
       ${resource.tags && resource.tags.length > 0 ? `
         <div class="resource-tags">
-          ${resource.tags.map(tag => `<span class="resource-tag">${sanitizeHtml(tag)}</span>`).join('')}
+          ${resource.tags.map(tag => `<span class="resource-tag">${sanitizeUserContent(tag)}</span>`).join('')}
         </div>
       ` : ''}
       <div class="resource-footer">
-        <button class="resource-view-btn" data-resource-id="${resource.id}" aria-label="View details for ${sanitizeHtml(resource.name)}">
+        <button class="resource-view-btn" data-resource-id="${resource.id}" aria-label="View details for ${sanitizeUserContent(resource.name)}">
           View Details
         </button>
       </div>
@@ -289,19 +289,19 @@ export class ResourceBrowserUI {
     modal.innerHTML = `
       <div class="resource-modal-content">
         <div class="resource-modal-header">
-          <h2>${sanitizeHtml(resource.name)}</h2>
+          <h2>${sanitizeUserContent(resource.name)}</h2>
           <button class="resource-modal-close" aria-label="Close">&times;</button>
         </div>
         <div class="resource-modal-body">
           <p><strong>Type:</strong> ${this.formatResourceType(resource.resourceType)}</p>
           <p><strong>Share Mode:</strong> ${this.formatShareMode(resource.shareMode)}</p>
           <p><strong>Status:</strong> ${resource.available ? 'Available' : 'Not Available'}</p>
-          ${resource.location ? `<p><strong>Location:</strong> ${sanitizeHtml(resource.location)}</p>` : ''}
+          ${resource.location ? `<p><strong>Location:</strong> ${sanitizeUserContent(resource.location)}</p>` : ''}
           <p><strong>Description:</strong></p>
-          <p>${sanitizeHtml(resource.description)}</p>
+          <p>${sanitizeUserContent(resource.description)}</p>
           ${resource.tags && resource.tags.length > 0 ? `
             <div class="resource-tags">
-              ${resource.tags.map(tag => `<span class="resource-tag">${sanitizeHtml(tag)}</span>`).join('')}
+              ${resource.tags.map(tag => `<span class="resource-tag">${sanitizeUserContent(tag)}</span>`).join('')}
             </div>
           ` : ''}
         </div>

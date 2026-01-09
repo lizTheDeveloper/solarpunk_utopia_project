@@ -7,6 +7,7 @@
  */
 
 import { db } from '../core/database';
+import { requireValidIdentifier } from '../utils/sanitize';
 import type { EmergencyAlert, CareCircle } from '../types';
 
 /**
@@ -21,6 +22,7 @@ export async function triggerEmergencyAlert(
     severity?: 'urgent' | 'emergency';
   } = {}
 ): Promise<EmergencyAlert> {
+  requireValidIdentifier(userId, 'User ID');
   const careCircle = db.getUserCareCircle(userId);
 
   if (!careCircle) {
@@ -72,6 +74,8 @@ export async function respondToEmergencyAlert(
     status: 'on-way' | 'contacted' | 'arrived' | 'resolved';
   }
 ): Promise<void> {
+  requireValidIdentifier(alertId, 'Alert ID');
+  requireValidIdentifier(responderId, 'Responder ID');
   const alert = db.getEmergencyAlert(alertId);
   if (!alert) {
     throw new Error('Emergency alert not found');
@@ -122,6 +126,7 @@ export async function respondToEmergencyAlert(
  * Get active emergency alerts for care circles the user is a member of
  */
 export function getMyEmergencyAlerts(memberId: string): EmergencyAlert[] {
+  requireValidIdentifier(memberId, 'Member ID');
   return db.getEmergencyAlertsForMember(memberId);
 }
 
@@ -129,6 +134,7 @@ export function getMyEmergencyAlerts(memberId: string): EmergencyAlert[] {
  * Get emergency alert by ID
  */
 export function getEmergencyAlert(alertId: string): EmergencyAlert | undefined {
+  requireValidIdentifier(alertId, 'Alert ID');
   return db.getEmergencyAlert(alertId);
 }
 
@@ -140,6 +146,8 @@ export async function resolveEmergencyAlert(
   resolvedBy: string,
   resolution?: string
 ): Promise<void> {
+  requireValidIdentifier(alertId, 'Alert ID');
+  requireValidIdentifier(resolvedBy, 'Resolver ID');
   const alert = db.getEmergencyAlert(alertId);
   if (!alert) {
     throw new Error('Emergency alert not found');
@@ -163,6 +171,7 @@ export async function resolveEmergencyAlert(
  * Get emergency alert history for a user
  */
 export function getEmergencyAlertHistory(userId: string): EmergencyAlert[] {
+  requireValidIdentifier(userId, 'User ID');
   return db.listEmergencyAlerts().filter(alert => alert.userId === userId);
 }
 
@@ -174,6 +183,8 @@ export async function cancelEmergencyAlert(
   userId: string,
   reason?: string
 ): Promise<void> {
+  requireValidIdentifier(alertId, 'Alert ID');
+  requireValidIdentifier(userId, 'User ID');
   const alert = db.getEmergencyAlert(alertId);
   if (!alert) {
     throw new Error('Emergency alert not found');
@@ -203,6 +214,9 @@ export async function setupEmergencyContacts(
     checkInFrequency?: 'daily' | 'twice-daily' | 'weekly';
   } = {}
 ): Promise<CareCircle> {
+  requireValidIdentifier(userId, 'User ID');
+  contactIds.forEach((id, index) => requireValidIdentifier(id, `Contact ID at position ${index}`));
+
   // Prevent user from adding themselves as an emergency contact
   if (contactIds.includes(userId)) {
     throw new Error('You cannot add yourself as an emergency contact');
@@ -225,6 +239,9 @@ export async function addEmergencyContact(
   userId: string,
   contactId: string
 ): Promise<void> {
+  requireValidIdentifier(userId, 'User ID');
+  requireValidIdentifier(contactId, 'Contact ID');
+
   if (userId === contactId) {
     throw new Error('You cannot add yourself as an emergency contact');
   }
@@ -252,6 +269,8 @@ export async function removeEmergencyContact(
   userId: string,
   contactId: string
 ): Promise<void> {
+  requireValidIdentifier(userId, 'User ID');
+  requireValidIdentifier(contactId, 'Contact ID');
   const careCircle = db.getUserCareCircle(userId);
 
   if (!careCircle) {
@@ -273,6 +292,7 @@ export async function removeEmergencyContact(
  * Get emergency contacts for a user
  */
 export function getEmergencyContacts(userId: string): string[] {
+  requireValidIdentifier(userId, 'User ID');
   const careCircle = db.getUserCareCircle(userId);
   return careCircle?.members || [];
 }
@@ -281,6 +301,7 @@ export function getEmergencyContacts(userId: string): string[] {
  * Check if user has emergency contacts set up
  */
 export function hasEmergencyContacts(userId: string): boolean {
+  requireValidIdentifier(userId, 'User ID');
   const careCircle = db.getUserCareCircle(userId);
   return !!careCircle && careCircle.members.length > 0;
 }

@@ -7,7 +7,7 @@
 
 import * as Automerge from '@automerge/automerge';
 import { openDB, type IDBPDatabase } from 'idb';
-import type { DatabaseSchema, Resource, Need, SkillOffer, EconomicEvent, UserProfile, Community, CommunityGroup, SyncStatus, CheckIn, CheckInStatus, CareCircle, CareActivity, MissedCheckInAlert, EmergencyAlert } from '../types';
+import type { DatabaseSchema, Resource, Need, SkillOffer, EconomicEvent, UserProfile, Community, CommunityGroup, SyncStatus, CheckIn, CheckInStatus, CareCircle, CareActivity, MissedCheckInAlert, EmergencyAlert, BulletinPost, BulletinComment, BulletinRSVP, RSVPResponse, CommunityEvent, CommunityEventRSVP, EventRSVPStatus, CommunityEventComment, CommunityEventType } from '../types';
 
 const DB_NAME = 'solarpunk-utopia';
 const DB_VERSION = 1;
@@ -102,6 +102,22 @@ export class LocalDatabase {
         });
         await this.save();
       }
+
+      // Migrate: Add bulletinPosts if it doesn't exist
+      if (!this.doc.bulletinPosts) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.bulletinPosts = {};
+        });
+        await this.save();
+      }
+
+      // Migrate: Add communityEvents if it doesn't exist
+      if (!this.doc.communityEvents) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.communityEvents = {};
+        });
+        await this.save();
+      }
     } else {
       // Create new document with initial schema
       this.doc = Automerge.from<DatabaseSchema>({
@@ -123,6 +139,8 @@ export class LocalDatabase {
         careActivities: {},
         missedCheckInAlerts: {},
         emergencyAlerts: {},
+        bulletinPosts: {},
+        communityEvents: {},
       });
       await this.save();
     }
@@ -423,9 +441,18 @@ export class LocalDatabase {
           const value = (updates as any)[key];
           if (value !== undefined) {
             if (Array.isArray(value)) {
-              // For arrays, clear and push items to avoid reference errors
-              (doc.checkIns[id] as any)[key].length = 0;
-              value.forEach((item: any) => (doc.checkIns[id] as any)[key].push(item));
+              // For arrays, check if it exists first
+              const existingArray = (doc.checkIns[id] as any)[key];
+              if (existingArray && Array.isArray(existingArray)) {
+                // Pop all items then push new ones (Automerge doesn't support .length = 0)
+                while (existingArray.length > 0) {
+                  existingArray.pop();
+                }
+                value.forEach((item: any) => existingArray.push(item));
+              } else {
+                // Initialize new array
+                (doc.checkIns[id] as any)[key] = value;
+              }
             } else {
               (doc.checkIns[id] as any)[key] = value;
             }
@@ -592,9 +619,18 @@ export class LocalDatabase {
           const value = (updates as any)[key];
           if (value !== undefined) {
             if (Array.isArray(value)) {
-              // For arrays, clear and push items to avoid reference errors
-              (doc.missedCheckInAlerts[id] as any)[key].length = 0;
-              value.forEach((item: any) => (doc.missedCheckInAlerts[id] as any)[key].push(item));
+              // For arrays, check if it exists first
+              const existingArray = (doc.missedCheckInAlerts[id] as any)[key];
+              if (existingArray && Array.isArray(existingArray)) {
+                // Pop all items then push new ones (Automerge doesn't support .length = 0)
+                while (existingArray.length > 0) {
+                  existingArray.pop();
+                }
+                value.forEach((item: any) => existingArray.push(item));
+              } else {
+                // Initialize new array
+                (doc.missedCheckInAlerts[id] as any)[key] = value;
+              }
             } else {
               (doc.missedCheckInAlerts[id] as any)[key] = value;
             }
@@ -689,6 +725,330 @@ export class LocalDatabase {
     return this.listEmergencyAlerts().filter(alert => alert.userId === userId);
   }
 
+  // ===== Bulletin Board Operations =====
+  // REQ-GOV-019: Community Bulletin Board
+
+  async addBulletinPost(post: Omit<BulletinPost, 'id' | 'createdAt' | 'updatedAt' | 'rsvps' | 'comments' | 'interestedUsers'>): Promise<BulletinPost> {
+    const newPost: BulletinPost = {
+      ...post,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      rsvps: [],
+      comments: [],
+      interestedUsers: [],
+    };
+
+    await this.update((doc) => {
+      doc.bulletinPosts[newPost.id] = newPost;
+    });
+
+    return newPost;
+  }
+
+  async updateBulletinPost(id: string, updates: Partial<BulletinPost>): Promise<void> {
+    await this.update((doc) => {
+      if (doc.bulletinPosts[id]) {
+        Object.assign(doc.bulletinPosts[id], updates, { updatedAt: Date.now() });
+      }
+    });
+  }
+
+  async deleteBulletinPost(id: string): Promise<void> {
+    await this.update((doc) => {
+      delete doc.bulletinPosts[id];
+    });
+  }
+
+  getBulletinPost(id: string): BulletinPost | undefined {
+    return this.getDoc().bulletinPosts[id];
+  }
+
+  listBulletinPosts(): BulletinPost[] {
+    return Object.values(this.getDoc().bulletinPosts);
+  }
+
+  /**
+   * Get active bulletin posts (not archived or cancelled)
+   */
+  getActiveBulletinPosts(): BulletinPost[] {
+    return this.listBulletinPosts().filter(p => p.status === 'active');
+  }
+
+  /**
+   * Get bulletin posts for a specific community group
+   */
+  getBulletinPostsByGroup(communityGroupId: string): BulletinPost[] {
+    return this.listBulletinPosts().filter(p => p.communityGroupId === communityGroupId);
+  }
+
+  /**
+   * Get pinned bulletin posts
+   */
+  getPinnedBulletinPosts(): BulletinPost[] {
+    const now = Date.now();
+    return this.listBulletinPosts().filter(p =>
+      p.status === 'active' && p.pinnedUntil && p.pinnedUntil > now
+    );
+  }
+
+  /**
+   * Add a comment to a bulletin post
+   */
+  async addBulletinComment(postId: string, comment: Omit<BulletinComment, 'id' | 'postId' | 'createdAt'>): Promise<BulletinComment> {
+    const newComment: BulletinComment = {
+      ...comment,
+      id: crypto.randomUUID(),
+      postId,
+      createdAt: Date.now(),
+    };
+
+    await this.update((doc) => {
+      if (doc.bulletinPosts[postId]) {
+        doc.bulletinPosts[postId].comments.push(newComment as any);
+        doc.bulletinPosts[postId].updatedAt = Date.now();
+      }
+    });
+
+    return newComment;
+  }
+
+  /**
+   * Add or update an RSVP on a bulletin post
+   */
+  async setBulletinRSVP(postId: string, userId: string, response: RSVPResponse, note?: string): Promise<void> {
+    await this.update((doc) => {
+      if (doc.bulletinPosts[postId]) {
+        const existingIndex = doc.bulletinPosts[postId].rsvps.findIndex(
+          (r: BulletinRSVP) => r.userId === userId
+        );
+
+        const rsvp: BulletinRSVP = {
+          userId,
+          response,
+          note,
+          createdAt: Date.now(),
+        };
+
+        if (existingIndex >= 0) {
+          // Update existing RSVP
+          rsvp.updatedAt = Date.now();
+          Object.assign(doc.bulletinPosts[postId].rsvps[existingIndex], rsvp);
+        } else {
+          // Add new RSVP
+          doc.bulletinPosts[postId].rsvps.push(rsvp as any);
+        }
+        doc.bulletinPosts[postId].updatedAt = Date.now();
+      }
+    });
+  }
+
+  /**
+   * Mark a user as interested in a bulletin post (for reminders)
+   */
+  async markInterested(postId: string, userId: string): Promise<void> {
+    await this.update((doc) => {
+      if (doc.bulletinPosts[postId]) {
+        if (!doc.bulletinPosts[postId].interestedUsers.includes(userId)) {
+          doc.bulletinPosts[postId].interestedUsers.push(userId);
+          doc.bulletinPosts[postId].updatedAt = Date.now();
+        }
+      }
+    });
+  }
+
+  /**
+   * Remove interest from a bulletin post
+   */
+  async removeInterest(postId: string, userId: string): Promise<void> {
+    await this.update((doc) => {
+      if (doc.bulletinPosts[postId]) {
+        const index = doc.bulletinPosts[postId].interestedUsers.indexOf(userId);
+        if (index >= 0) {
+          doc.bulletinPosts[postId].interestedUsers.splice(index, 1);
+          doc.bulletinPosts[postId].updatedAt = Date.now();
+        }
+      }
+    });
+  }
+
+  /**
+   * Get upcoming event bulletin posts
+   */
+  getUpcomingEventPosts(): BulletinPost[] {
+    const now = Date.now();
+    return this.listBulletinPosts().filter(p =>
+      p.status === 'active' &&
+      p.postType === 'event' &&
+      p.eventDetails?.startTime &&
+      p.eventDetails.startTime > now
+    ).sort((a, b) => (a.eventDetails?.startTime || 0) - (b.eventDetails?.startTime || 0));
+  }
+
+  // ===== Community Event Operations =====
+  // REQ-GOV-019: Community Bulletin Board - Community events listing
+
+  async addCommunityEvent(event: Omit<CommunityEvent, 'id' | 'createdAt' | 'updatedAt'>): Promise<CommunityEvent> {
+    const newEvent: CommunityEvent = {
+      ...event,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    // Remove undefined values for Automerge compatibility
+    await this.update((doc) => {
+      const eventData: Record<string, unknown> = { ...newEvent };
+      Object.keys(eventData).forEach(key => {
+        if (eventData[key] === undefined) {
+          delete eventData[key];
+        }
+      });
+      doc.communityEvents[newEvent.id] = eventData as CommunityEvent;
+    });
+
+    return newEvent;
+  }
+
+  async updateCommunityEvent(id: string, updates: Partial<CommunityEvent>): Promise<void> {
+    await this.update((doc) => {
+      if (doc.communityEvents[id]) {
+        Object.assign(doc.communityEvents[id], updates, { updatedAt: Date.now() });
+      }
+    });
+  }
+
+  async deleteCommunityEvent(id: string): Promise<void> {
+    await this.update((doc) => {
+      delete doc.communityEvents[id];
+    });
+  }
+
+  getCommunityEvent(id: string): CommunityEvent | undefined {
+    return this.getDoc().communityEvents[id];
+  }
+
+  listCommunityEvents(): CommunityEvent[] {
+    return Object.values(this.getDoc().communityEvents);
+  }
+
+  /**
+   * Get upcoming events (events that haven't started yet)
+   */
+  getUpcomingEvents(): CommunityEvent[] {
+    const now = Date.now();
+    return this.listCommunityEvents()
+      .filter(e => e.status === 'published' && e.startTime > now)
+      .sort((a, b) => a.startTime - b.startTime);
+  }
+
+  /**
+   * Get events happening today
+   */
+  getTodaysEvents(): CommunityEvent[] {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const todayEnd = todayStart + 24 * 60 * 60 * 1000;
+
+    return this.listCommunityEvents()
+      .filter(e => e.status === 'published' && e.startTime >= todayStart && e.startTime < todayEnd)
+      .sort((a, b) => a.startTime - b.startTime);
+  }
+
+  /**
+   * Get events within a date range
+   */
+  getEventsInRange(startDate: number, endDate: number): CommunityEvent[] {
+    return this.listCommunityEvents()
+      .filter(e => e.status === 'published' && e.startTime >= startDate && e.startTime <= endDate)
+      .sort((a, b) => a.startTime - b.startTime);
+  }
+
+  /**
+   * Get events organized by a specific user
+   */
+  getUserOrganizedEvents(userId: string): CommunityEvent[] {
+    return this.listCommunityEvents().filter(e => e.organizerId === userId);
+  }
+
+  /**
+   * Get events for a specific community group
+   */
+  getCommunityGroupEvents(groupId: string): CommunityEvent[] {
+    return this.listCommunityEvents()
+      .filter(e => e.communityGroupId === groupId && e.status === 'published')
+      .sort((a, b) => a.startTime - b.startTime);
+  }
+
+  /**
+   * Get events a user has RSVP'd to
+   */
+  getUserRsvpdEvents(userId: string): CommunityEvent[] {
+    return this.listCommunityEvents()
+      .filter(e => e.rsvps.some(r => r.userId === userId && r.status === 'going'))
+      .sort((a, b) => a.startTime - b.startTime);
+  }
+
+  /**
+   * Add or update RSVP for an event
+   */
+  async updateEventRsvp(eventId: string, rsvp: CommunityEventRSVP): Promise<void> {
+    await this.update((doc) => {
+      const event = doc.communityEvents[eventId];
+      if (event) {
+        const existingIndex = event.rsvps.findIndex(r => r.userId === rsvp.userId);
+        if (existingIndex >= 0) {
+          // Update existing RSVP
+          Object.assign(event.rsvps[existingIndex], rsvp, { respondedAt: Date.now() });
+        } else {
+          // Add new RSVP
+          event.rsvps.push({ ...rsvp, respondedAt: Date.now() });
+        }
+        event.updatedAt = Date.now();
+      }
+    });
+  }
+
+  /**
+   * Add a comment to an event
+   */
+  async addEventComment(eventId: string, userId: string, text: string): Promise<CommunityEventComment> {
+    const comment: CommunityEventComment = {
+      id: crypto.randomUUID(),
+      userId,
+      text,
+      createdAt: Date.now(),
+    };
+
+    await this.update((doc) => {
+      const event = doc.communityEvents[eventId];
+      if (event) {
+        event.comments.push(comment);
+        event.updatedAt = Date.now();
+      }
+    });
+
+    return comment;
+  }
+
+  /**
+   * Get events by type
+   */
+  getEventsByType(eventType: CommunityEventType): CommunityEvent[] {
+    return this.listCommunityEvents()
+      .filter(e => e.eventType === eventType && e.status === 'published')
+      .sort((a, b) => a.startTime - b.startTime);
+  }
+
+  /**
+   * Get public events (visible to everyone)
+   */
+  getPublicEvents(): CommunityEvent[] {
+    return this.listCommunityEvents()
+      .filter(e => e.visibility === 'public' && e.status === 'published')
+      .sort((a, b) => a.startTime - b.startTime);
+  }
+
   // ===== Sync Operations =====
 
   /**
@@ -727,6 +1087,46 @@ export class LocalDatabase {
       isOnline: navigator.onLine,
       connectedPeers: 0, // TODO: Track peer connections
     };
+  }
+
+  /**
+   * Reset database - clear all data (for testing)
+   * Creates a fresh empty document while preserving the database connection
+   */
+  async reset(): Promise<void> {
+    if (!this.db) {
+      await this.init();
+      return;
+    }
+
+    // Create fresh Automerge document with empty collections
+    this.doc = Automerge.from<DatabaseSchema>({
+      resources: {},
+      needs: {},
+      skillOffers: {},
+      events: {},
+      users: {},
+      communities: {},
+      communityGroups: {},
+      syncStatus: {
+        lastSync: 0,
+        peersConnected: 0,
+        pendingChanges: 0,
+      },
+      checkIns: {},
+      careCircles: {},
+      careActivities: {},
+      missedCheckInAlerts: {},
+      emergencyAlerts: {},
+      bulletinPosts: {},
+      communityEvents: {},
+    });
+    await this.save();
+
+    // Notify listeners of the reset
+    for (const listener of this.listeners) {
+      listener(this.doc);
+    }
   }
 
   /**

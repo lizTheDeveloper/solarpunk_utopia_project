@@ -3,6 +3,7 @@
  * Phase 2, Group C: Respond to needs
  */
 
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { db, LocalDatabase } from '../core/database';
 import { NeedPosting } from './need-posting';
 import {
@@ -23,6 +24,13 @@ describe('Need Response System', () => {
   beforeEach(async () => {
     // Use the global db singleton that need-response uses
     await db.init();
+
+    // Clear all existing needs before each test to ensure isolation
+    const existingNeeds = db.listNeeds();
+    for (const need of existingNeeds) {
+      await db.deleteNeed(need.id);
+    }
+
     needPosting = new NeedPosting(db);
 
     // Create a test need
@@ -233,6 +241,10 @@ describe('Need Response System', () => {
     });
 
     it('should handle multiple helpers in gratitude', async () => {
+      // Count existing events before this test
+      const eventsBefore = db.listEvents().filter(e => e.note?.includes('Gratitude:'));
+      const countBefore = eventsBefore.length;
+
       const result = await markNeedFulfilled(
         testNeed.id,
         'user-alice',
@@ -245,11 +257,11 @@ describe('Need Response System', () => {
       expect(result.success).toBe(true);
 
       // Should create gratitude events for each helper
-      const events = db.listEvents();
-      const gratitudeEvents = events.filter(e =>
+      const eventsAfter = db.listEvents().filter(e =>
         e.note?.includes('Gratitude:')
       );
-      expect(gratitudeEvents.length).toBe(2);
+      // 2 new events should be created (one for each helper)
+      expect(eventsAfter.length - countBefore).toBe(2);
     });
   });
 
@@ -375,9 +387,13 @@ describe('Need Response System', () => {
       );
 
       expect(response.success).toBe(true);
+      // HTML tags should be escaped, not stripped
+      // The raw HTML tags should not be present
       expect(response.response?.message).not.toContain('<script>');
-      expect(response.response?.message).not.toContain('onerror');
       expect(response.response?.message).not.toContain('<img');
+      // Should contain escaped versions
+      expect(response.response?.message).toContain('&lt;script&gt;');
+      expect(response.response?.message).toContain('&lt;img');
     });
 
     it('should sanitize gratitude messages', async () => {

@@ -13,8 +13,9 @@ describe('NeedBrowser - Urgency Indicators', () => {
   let db: LocalDatabase;
   let browser: NeedBrowser;
 
-  beforeEach(() => {
-    db = new LocalDatabase();
+  beforeEach(async () => {
+    db = new LocalDatabase(`test-need-browser-${Date.now()}`);
+    await db.init();
     browser = new NeedBrowser(db);
   });
 

@@ -15,7 +15,7 @@
  */
 
 import { db } from '../core/database';
-import type { Need, EconomicEvent, Resource } from '../types';
+import type { Need, EconomicEvent, Resource, UserProfile } from '../types';
 import { sanitizeUserContent, validateIdentifier } from '../utils/sanitize';
 
 /**
@@ -191,7 +191,7 @@ export async function respondToNeed(
  */
 export function getNeedResponses(needId: string): Array<{
   event: EconomicEvent;
-  responder: any; // Would be UserProfile in full implementation
+  responder: UserProfile | undefined;
 }> {
   if (!validateIdentifier(needId)) {
     return [];

@@ -8,7 +8,7 @@
 
 import { db } from '../core/database';
 import type { Resource } from '../types';
-import { sanitizeUserContent, validateIdentifier } from '../utils/sanitize';
+import { sanitizeUserContent, sanitizeUrl, sanitizeAttribute, validateIdentifier, requireValidIdentifier } from '../utils/sanitize';
 
 /**
  * Mark a resource as claimed (not available)
@@ -18,6 +18,11 @@ export async function markResourceClaimed(
   claimedBy?: string,
   note?: string
 ): Promise<void> {
+  requireValidIdentifier(resourceId, 'Resource ID');
+  if (claimedBy) {
+    requireValidIdentifier(claimedBy, 'Claimer ID');
+  }
+
   const resource = db.getResource(resourceId);
   if (!resource) {
     throw new Error('Resource not found');
@@ -29,7 +34,7 @@ export async function markResourceClaimed(
 
   // Optionally record the claim event
   if (claimedBy) {
-    await db.addEvent({
+    await db.recordEvent({
       action: 'transfer',
       providerId: resource.ownerId,
       receiverId: claimedBy,
@@ -47,6 +52,11 @@ export async function markResourceAvailable(
   returnedBy?: string,
   note?: string
 ): Promise<void> {
+  requireValidIdentifier(resourceId, 'Resource ID');
+  if (returnedBy) {
+    requireValidIdentifier(returnedBy, 'Returner ID');
+  }
+
   const resource = db.getResource(resourceId);
   if (!resource) {
     throw new Error('Resource not found');
@@ -58,7 +68,7 @@ export async function markResourceAvailable(
 
   // Optionally record the return event
   if (returnedBy) {
-    await db.addEvent({
+    await db.recordEvent({
       action: 'return',
       providerId: returnedBy,
       receiverId: resource.ownerId,
@@ -75,6 +85,9 @@ export async function toggleResourceAvailability(
   resourceId: string,
   userId: string
 ): Promise<boolean> {
+  requireValidIdentifier(resourceId, 'Resource ID');
+  requireValidIdentifier(userId, 'User ID');
+
   const resource = db.getResource(resourceId);
   if (!resource) {
     throw new Error('Resource not found');
@@ -111,6 +124,9 @@ export function getClaimedResources(): Resource[] {
  * Get resources by owner
  */
 export function getResourcesByOwner(ownerId: string): Resource[] {
+  if (!validateIdentifier(ownerId)) {
+    return [];
+  }
   return db.listResources().filter(r => r.ownerId === ownerId);
 }
 
@@ -157,7 +173,7 @@ export function renderResourceCard(resource: Resource, isOwner: boolean = false)
 
   const photos = resource.photos && resource.photos.length > 0
     ? `<div class="resource-photos">
-        ${resource.photos.map(photo => `<img src="${photo}" alt="${sanitizeUserContent(resource.name)}" class="resource-photo" />`).join('')}
+        ${resource.photos.map(photo => `<img src="${sanitizeUrl(photo)}" alt="${sanitizeUserContent(resource.name)}" class="resource-photo" />`).join('')}
       </div>`
     : '';
 
@@ -169,17 +185,17 @@ export function renderResourceCard(resource: Resource, isOwner: boolean = false)
 
   const ownerControls = isOwner
     ? `<div class="resource-owner-controls">
-        <button class="btn-toggle-status" data-resource-id="${validateIdentifier(resource.id)}">
+        <button class="btn-toggle-status" data-resource-id="${sanitizeAttribute(resource.id)}">
           ${resource.available ? 'Mark as Claimed' : 'Mark as Available'}
         </button>
-        <button class="btn-edit-resource" data-resource-id="${validateIdentifier(resource.id)}">
+        <button class="btn-edit-resource" data-resource-id="${sanitizeAttribute(resource.id)}">
           Edit
         </button>
       </div>`
     : '';
 
   const claimButton = !isOwner && resource.available
-    ? `<button class="btn-claim-resource" data-resource-id="${validateIdentifier(resource.id)}">
+    ? `<button class="btn-claim-resource" data-resource-id="${sanitizeAttribute(resource.id)}">
         Claim this ${resource.shareMode === 'give' ? 'gift' : 'item'}
       </button>`
     : '';
@@ -303,8 +319,8 @@ export function initResourceStatusHandlers(userId: string) {
   // Toggle status buttons (for owners)
   document.querySelectorAll('.btn-toggle-status').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const resourceId = validateIdentifier((e.target as HTMLElement).dataset.resourceId);
-      if (resourceId) {
+      const resourceId = (e.target as HTMLElement).dataset.resourceId;
+      if (resourceId && validateIdentifier(resourceId)) {
         try {
           const newStatus = await toggleResourceAvailability(resourceId, userId);
           const message = newStatus
@@ -324,8 +340,8 @@ export function initResourceStatusHandlers(userId: string) {
   // Claim resource buttons (for non-owners)
   document.querySelectorAll('.btn-claim-resource').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const resourceId = validateIdentifier((e.target as HTMLElement).dataset.resourceId);
-      if (resourceId) {
+      const resourceId = (e.target as HTMLElement).dataset.resourceId;
+      if (resourceId && validateIdentifier(resourceId)) {
         const confirmed = confirm('Do you want to claim this resource?');
         if (confirmed) {
           try {

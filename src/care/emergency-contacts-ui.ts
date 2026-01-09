@@ -19,7 +19,7 @@ import {
   hasEmergencyContacts,
 } from './emergency-contacts';
 import { db } from '../core/database';
-import { sanitizeUserContent, requireValidIdentifier } from '../utils/sanitize';
+import { sanitizeUserContent, requireValidIdentifier, sanitizeAttribute } from '../utils/sanitize';
 import type { EmergencyAlert } from '../types';
 
 /**
@@ -57,15 +57,15 @@ export function renderEmergencyAlertButton(userId: string): string {
   }
 
   return `
-    <div class="emergency-alert-trigger">
+    <div class="emergency-alert-trigger" role="region" aria-label="Emergency alert controls">
       <h4>🚨 Emergency Alert</h4>
       <p class="alert-description">
         Press this button if you need immediate help. Your emergency contacts will be notified right away.
       </p>
-      <button id="trigger-emergency-alert" class="btn-emergency btn-large">
+      <button id="trigger-emergency-alert" class="btn-emergency btn-large" aria-label="Send emergency alert to all contacts">
         🚨 ALERT EMERGENCY CONTACTS
       </button>
-      <button id="trigger-urgent-alert" class="btn-urgent">
+      <button id="trigger-urgent-alert" class="btn-urgent" aria-label="Send urgent help request">
         ⚠️ Send urgent help request
       </button>
     </div>
@@ -89,7 +89,7 @@ export function renderEmergencyContactsManagement(userId: string): string {
           return `
             <li class="contact-item">
               <span class="contact-name">${sanitizeUserContent(displayName)}</span>
-              <button class="btn-remove-contact" data-contact-id="${contactId}">
+              <button class="btn-remove-contact" data-contact-id="${sanitizeAttribute(contactId)}">
                 Remove
               </button>
             </li>
@@ -148,13 +148,13 @@ export function renderEmergencyAlerts(memberId: string): string {
   }
 
   return `
-    <div class="emergency-alerts-section">
+    <div class="emergency-alerts-section" role="alert" aria-live="assertive">
       <h3>🚨 Active Emergency Alerts</h3>
       <p class="alerts-description">
         Members of your care circles need immediate help.
       </p>
 
-      <div class="emergency-alerts-list">
+      <div class="emergency-alerts-list" role="list" aria-label="Emergency alerts requiring response">
         ${alerts.map(alert => renderEmergencyAlertCard(alert)).join('')}
       </div>
     </div>
@@ -243,13 +243,13 @@ function renderEmergencyAlertCard(alert: EmergencyAlert): string {
       </div>
 
       <div class="alert-actions">
-        <button class="btn-respond-onway" data-alert-id="${alert.id}">
+        <button class="btn-respond-onway" data-alert-id="${sanitizeAttribute(alert.id)}">
           🏃 I'm on my way
         </button>
-        <button class="btn-respond-contacted" data-alert-id="${alert.id}">
+        <button class="btn-respond-contacted" data-alert-id="${sanitizeAttribute(alert.id)}">
           📞 I've made contact
         </button>
-        <button class="btn-respond-arrived" data-alert-id="${alert.id}">
+        <button class="btn-respond-arrived" data-alert-id="${sanitizeAttribute(alert.id)}">
           ✓ I've arrived
         </button>
       </div>

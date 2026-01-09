@@ -49,30 +49,57 @@ echo ""
 
 # Phase 2: Review and Test Agent
 echo "🔍 Phase 2: Launching Review and Test Agent..."
-echo "This agent will review the implementation and write tests."
+echo "This agent will review the implementation using the code review checklist and write tests."
 echo ""
 
 claude --dangerously-skip-permissions --print "
 You are the Review and Test Agent for the Solarpunk Utopia Platform.
 
+IMPORTANT: Before starting, read the AGENT_CODE_REVIEW_CHECKLIST.md file.
+Use it as your guide for this review.
+
 YOUR TASK:
-1. Review the code that was just implemented by the previous agent
-2. Check for:
-   - Security vulnerabilities (XSS, injection, etc.)
-   - Adherence to solarpunk values (no tracking, no surveillance, offline-first)
-   - Code quality and simplicity
-   - Accessibility concerns
-3. Fix any issues you find
-4. Write comprehensive tests for the implemented feature
-5. Run the tests to ensure they pass
-6. DO NOT commit any code - the next agent will do that
+1. Read AGENT_CODE_REVIEW_CHECKLIST.md thoroughly
+2. Review the code that was just implemented by the previous agent
+3. Use the checklist to verify:
+
+   TYPE SAFETY:
+   - [ ] No \`any\` types without justification
+   - [ ] Null/undefined properly handled
+   - [ ] Function return types explicit
+
+   ERROR HANDLING:
+   - [ ] All async operations have try/catch or .catch() handlers
+   - [ ] Errors include context (what and where)
+   - [ ] Consistent error pattern (throw OR return {success, error})
+
+   SECURITY:
+   - [ ] All user input sanitized using sanitizeUserContent()
+   - [ ] IDs validated using requireValidIdentifier()
+   - [ ] No innerHTML with unsanitized user content
+   - [ ] No secrets or hardcoded user IDs like 'user-1'
+
+   SOLARPUNK VALUES:
+   - [ ] No tracking or analytics added
+   - [ ] Works offline (no external API dependencies)
+   - [ ] Automerge compatible (no undefined values, arrays modified in-place)
+
+   CODE QUALITY:
+   - [ ] Functions are small (single responsibility)
+   - [ ] No code duplication
+   - [ ] Uses existing utilities from src/utils/
+
+4. Fix any issues you find based on the checklist
+5. Write comprehensive tests for the implemented feature
+6. Run the tests to ensure they pass (npm test)
+7. DO NOT commit any code - the next agent will do that
 
 Remember:
-- Be thorough but not perfectionist
+- Be thorough - the checklist exists because these issues keep recurring
 - Tests should cover both happy paths and edge cases
-- Make sure the feature works offline
+- Check TECH_DEBT_REPORT.md to avoid repeating known issues
 
-Review the recent changes and write tests for them.
+Review the recent changes using the checklist and write tests.
 "
 
 if [ $? -ne 0 ]; then

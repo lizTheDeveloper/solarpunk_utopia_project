@@ -18,7 +18,13 @@
 import { NeedBrowser, type NeedFilter, type NeedSearchResult } from './need-browser';
 import type { Need, UrgencyLevel, ResourceType } from '../types';
 import { LocalDatabase } from '../core/database';
-import { sanitizeUserContent } from '../utils/sanitize';
+import { sanitizeUserContent, escapeHtml } from '../utils/sanitize';
+
+/**
+ * Alias for escapeHtml to sanitize HTML content for display
+ * Used throughout this module for rendering need descriptions safely
+ */
+const sanitizeHtml = escapeHtml;
 
 export interface NeedBrowserUIOptions {
   containerId: string;

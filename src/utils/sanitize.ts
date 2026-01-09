@@ -61,3 +61,33 @@ export function requireValidIdentifier(id: string | undefined, fieldName: string
   }
   return id;
 }
+
+/**
+ * Sanitize a URL for use in HTML src/href attributes
+ * Only allows safe URL schemes: blob:, data:image/, https://, http://
+ * Prevents javascript: and other dangerous protocols
+ */
+export function sanitizeUrl(url: string | undefined): string {
+  if (!url) return '';
+
+  const trimmedUrl = url.trim();
+
+  // Allow blob URLs (used by photo-upload for IndexedDB storage)
+  if (trimmedUrl.startsWith('blob:')) {
+    return trimmedUrl;
+  }
+
+  // Allow data URLs but only for images
+  if (trimmedUrl.startsWith('data:image/')) {
+    return trimmedUrl;
+  }
+
+  // Allow https and http URLs
+  if (trimmedUrl.startsWith('https://') || trimmedUrl.startsWith('http://')) {
+    // Escape any HTML characters that might be in the URL
+    return escapeHtml(trimmedUrl);
+  }
+
+  // For any other scheme, return empty string (prevents javascript:, etc.)
+  return '';
+}

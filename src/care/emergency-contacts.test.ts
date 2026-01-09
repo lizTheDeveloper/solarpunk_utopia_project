@@ -113,6 +113,65 @@ describe('Emergency Contact Circles', () => {
         await removeEmergencyContact('user-1', 'user-2');
       }).rejects.toThrow('Cannot remove last emergency contact');
     });
+
+    it('should prevent user from adding themselves as emergency contact', async () => {
+      await expect(async () => {
+        await setupEmergencyContacts('user-1', ['user-1']);
+      }).rejects.toThrow('You cannot add yourself as an emergency contact');
+    });
+
+    it('should prevent adding self to existing care circle', async () => {
+      await setupEmergencyContacts('user-1', ['user-2']);
+
+      await expect(async () => {
+        await addEmergencyContact('user-1', 'user-1');
+      }).rejects.toThrow('You cannot add yourself as an emergency contact');
+    });
+  });
+
+  describe('Input Validation', () => {
+    it('should reject invalid user ID format', async () => {
+      await expect(async () => {
+        await setupEmergencyContacts('user<script>', ['user-2']);
+      }).rejects.toThrow('contains invalid characters');
+    });
+
+    it('should reject invalid contact ID format', async () => {
+      await expect(async () => {
+        await setupEmergencyContacts('user-1', ['user-2', 'user<script>']);
+      }).rejects.toThrow('contains invalid characters');
+    });
+
+    it('should reject empty user ID', async () => {
+      await expect(async () => {
+        await setupEmergencyContacts('', ['user-2']);
+      }).rejects.toThrow('required');
+    });
+
+    it('should reject invalid alert ID in response', async () => {
+      await setupEmergencyContacts('user-1', ['user-2']);
+
+      await expect(async () => {
+        await respondToEmergencyAlert('alert<invalid>', 'user-2', { status: 'on-way' });
+      }).rejects.toThrow('contains invalid characters');
+    });
+
+    it('should reject invalid responder ID', async () => {
+      await setupEmergencyContacts('user-1', ['user-2']);
+      const alert = await triggerEmergencyAlert('user-1', { message: 'Help' });
+
+      await expect(async () => {
+        await respondToEmergencyAlert(alert.id, 'user<invalid>', { status: 'on-way' });
+      }).rejects.toThrow('contains invalid characters');
+    });
+
+    it('should reject invalid user ID in hasEmergencyContacts', () => {
+      expect(() => hasEmergencyContacts('<script>')).toThrow('contains invalid characters');
+    });
+
+    it('should reject invalid user ID in getEmergencyContacts', () => {
+      expect(() => getEmergencyContacts('<script>')).toThrow('contains invalid characters');
+    });
   });
 
   describe('Emergency Alerts', () => {

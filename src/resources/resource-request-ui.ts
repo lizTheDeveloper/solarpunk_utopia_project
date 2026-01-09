@@ -5,8 +5,8 @@
  * Simple UI for browsing and requesting community resources
  */
 
-import { sanitizeUserContent } from '../utils/sanitize';
-import type { Resource, EconomicEvent } from '../types';
+import { sanitizeUserContent, sanitizeUrl, sanitizeAttribute } from '../utils/sanitize';
+import type { Resource, EconomicEvent, UserProfile } from '../types';
 
 /**
  * Render a resource card for browsing
@@ -21,7 +21,7 @@ export function renderResourceCard(resource: Resource): string {
 
   const photos = resource.photos && resource.photos.length > 0
     ? `<div class="resource-photos">
-        <img src="${resource.photos[0]}" alt="${sanitizeUserContent(resource.name)}" />
+        <img src="${sanitizeUrl(resource.photos[0])}" alt="${sanitizeUserContent(resource.name)}" />
       </div>`
     : '';
 
@@ -36,7 +36,7 @@ export function renderResourceCard(resource: Resource): string {
     : '';
 
   return `
-    <div class="resource-card" data-resource-id="${resource.id}">
+    <div class="resource-card" data-resource-id="${sanitizeAttribute(resource.id)}">
       ${photos}
       <div class="resource-header">
         <h3 class="resource-name">${sanitizeUserContent(resource.name)}</h3>
@@ -46,7 +46,7 @@ export function renderResourceCard(resource: Resource): string {
       ${location}
       ${tags}
       <div class="resource-actions">
-        <button class="btn btn-primary request-item-btn" data-resource-id="${resource.id}">
+        <button class="btn btn-primary request-item-btn" data-resource-id="${sanitizeAttribute(resource.id)}">
           Request Item
         </button>
       </div>
@@ -73,7 +73,7 @@ export function renderBrowseItemsPage(
           type="text"
           name="search"
           placeholder="Search items..."
-          value="${filters?.searchQuery || ''}"
+          value="${sanitizeAttribute(filters?.searchQuery || '')}"
           class="search-input"
         />
 
@@ -119,7 +119,7 @@ export function renderBrowseItemsPage(
  */
 export function renderRequestDialog(resource: Resource): string {
   return `
-    <div class="modal request-modal" id="request-modal-${resource.id}">
+    <div class="modal request-modal" id="request-modal-${sanitizeAttribute(resource.id)}">
       <div class="modal-content">
         <div class="modal-header">
           <h3>Request: ${sanitizeUserContent(resource.name)}</h3>
@@ -130,7 +130,7 @@ export function renderRequestDialog(resource: Resource): string {
           <p><strong>Description:</strong> ${sanitizeUserContent(resource.description)}</p>
           ${resource.location ? `<p><strong>Location:</strong> ${sanitizeUserContent(resource.location)}</p>` : ''}
 
-          <form class="request-form" data-resource-id="${resource.id}">
+          <form class="request-form" data-resource-id="${sanitizeAttribute(resource.id)}">
             <label for="request-message">
               Message to owner (optional):
             </label>
@@ -215,7 +215,7 @@ export function renderIncomingRequestsPage(
   requests: Array<{
     request: EconomicEvent;
     resource: Resource | undefined;
-    requesterProfile?: any;
+    requesterProfile?: UserProfile;
   }>
 ): string {
   if (requests.length === 0) {
@@ -250,8 +250,8 @@ export function renderIncomingRequestsPage(
           <div class="request-actions">
             <button
               class="btn btn-primary mark-claimed-btn"
-              data-resource-id="${resource.id}"
-              data-requester-id="${request.receiverId}"
+              data-resource-id="${sanitizeAttribute(resource.id)}"
+              data-requester-id="${sanitizeAttribute(request.receiverId)}"
             >
               Mark as Claimed
             </button>

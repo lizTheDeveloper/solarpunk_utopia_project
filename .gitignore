@@ -40,3 +40,23 @@ temp/
 
 # PWA
 dev-dist/
+
+# Runtime artifacts
+*.pid
+orchestrator-summary.txt
+
+# Generated scripts (orchestrators, monitoring)
+orchestrator.sh
+orchestrator-group.sh
+launch-4-orchestrators.sh
+run-parallel-orchestrators.sh
+restart-all-with-resume.sh
+stop-all-orchestrators.sh
+monitor-and-restart.sh
+check-parallel-status.sh
+
+# Generated reports
+AGENT_CODE_REVIEW_CHECKLIST.md
+FINAL_STATUS.md
+REVIEW_REPORT_*.md
+TECH_DEBT_REPORT.md

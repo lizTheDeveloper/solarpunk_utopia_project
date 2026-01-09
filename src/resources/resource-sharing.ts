@@ -8,8 +8,35 @@
  */
 
 import { db } from '../core/database';
-import type { Resource, Need, ResourceType, ShareMode, UrgencyLevel, EconomicEvent } from '../types';
-import { sanitizeUserContent, requireValidIdentifier } from '../utils/sanitize';
+import type { Resource, Need, ResourceType, ShareMode, UrgencyLevel, EconomicEvent, UserProfile } from '../types';
+import { sanitizeUserContent, requireValidIdentifier, validateIdentifier } from '../utils/sanitize';
+
+/**
+ * Resource creation data - for building resources without undefined values (Automerge compatible)
+ */
+interface ResourceCreateData {
+  name: string;
+  description: string;
+  resourceType: ResourceType;
+  shareMode: ShareMode;
+  available: boolean;
+  ownerId: string;
+  photos: string[];
+  tags: string[];
+  location?: string;
+}
+
+/**
+ * Resource update data - for partial updates
+ */
+interface ResourceUpdateData {
+  name?: string;
+  description?: string;
+  location?: string;
+  photos?: string[];
+  tags?: string[];
+  available?: boolean;
+}
 
 /**
  * Post an item to share or give away
@@ -30,7 +57,7 @@ export async function postItemToShare(
   requireValidIdentifier(userId, 'User ID');
 
   // Build resource object without undefined values (Automerge doesn't support undefined)
-  const resourceData: any = {
+  const resourceData: ResourceCreateData = {
     name: sanitizeUserContent(name),
     description: sanitizeUserContent(description),
     resourceType,
@@ -38,7 +65,7 @@ export async function postItemToShare(
     available: true,
     ownerId: userId,
     photos: options?.photos || [],
-    tags: options?.tags || [],
+    tags: (options?.tags || []).map(tag => sanitizeUserContent(tag)),
   };
 
   // Only include location if provided
@@ -202,6 +229,9 @@ export async function markItemAvailable(resourceId: string): Promise<void> {
  * Returns all transfer events where this resource is the subject
  */
 export function getItemRequests(resourceId: string): EconomicEvent[] {
+  if (!validateIdentifier(resourceId)) {
+    return [];
+  }
   return db.listEvents()
     .filter(event =>
       event.resourceId === resourceId &&
@@ -217,6 +247,9 @@ export function getMyRequests(userId: string): Array<{
   request: EconomicEvent;
   resource: Resource | undefined;
 }> {
+  if (!validateIdentifier(userId)) {
+    return [];
+  }
   return db.listEvents()
     .filter(event =>
       event.receiverId === userId &&
@@ -235,8 +268,11 @@ export function getMyRequests(userId: string): Array<{
 export function getRequestsForMyItems(userId: string): Array<{
   request: EconomicEvent;
   resource: Resource | undefined;
-  requesterProfile?: any; // Would be UserProfile in full implementation
+  requesterProfile?: UserProfile;
 }> {
+  if (!validateIdentifier(userId)) {
+    return [];
+  }
   return db.listEvents()
     .filter(event =>
       event.providerId === userId &&
@@ -266,7 +302,7 @@ export async function updateItem(
 ): Promise<void> {
   requireValidIdentifier(resourceId, 'Resource ID');
 
-  const sanitizedUpdates: any = {};
+  const sanitizedUpdates: ResourceUpdateData = {};
 
   if (updates.name !== undefined) {
     sanitizedUpdates.name = sanitizeUserContent(updates.name);
@@ -305,5 +341,8 @@ export async function removeItem(resourceId: string): Promise<void> {
  * Get a single resource by ID
  */
 export function getItem(resourceId: string): Resource | undefined {
+  if (!validateIdentifier(resourceId)) {
+    return undefined;
+  }
   return db.getResource(resourceId);
 }

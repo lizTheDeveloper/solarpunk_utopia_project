@@ -208,6 +208,8 @@ export interface DatabaseSchema {
   careActivities: Record<string, CareActivity>;
   missedCheckInAlerts: Record<string, MissedCheckInAlert>;
   emergencyAlerts: Record<string, EmergencyAlert>;
+  bulletinPosts: Record<string, BulletinPost>;
+  communityEvents: Record<string, CommunityEvent>;
 }
 
 /**
@@ -345,6 +347,201 @@ export interface MissedCheckInAlert {
   escalated: boolean;
   acknowledged: boolean;
   acknowledgedBy?: string[];
+}
+
+/**
+ * Bulletin Post Type - different kinds of community announcements
+ * REQ-GOV-019: Community Bulletin Board
+ */
+export type BulletinPostType = 'announcement' | 'event' | 'celebration' | 'discussion' | 'request' | 'other';
+
+/**
+ * Bulletin Post Status
+ * REQ-GOV-019: Community Bulletin Board
+ */
+export type BulletinPostStatus = 'active' | 'archived' | 'cancelled';
+
+/**
+ * RSVP Response for event-type posts
+ * REQ-GOV-019: Enable RSVPs and coordination
+ */
+export type RSVPResponse = 'going' | 'maybe' | 'not-going';
+
+/**
+ * Comment on a bulletin post
+ * REQ-GOV-019: Support comment threads
+ */
+export interface BulletinComment {
+  id: string;
+  postId: string;
+  userId: string;
+  content: string;
+  createdAt: number;
+  updatedAt?: number;
+  parentCommentId?: string; // For threaded replies
+}
+
+/**
+ * RSVP for an event-type bulletin post
+ * REQ-GOV-019: Enable RSVPs and coordination
+ */
+export interface BulletinRSVP {
+  userId: string;
+  response: RSVPResponse;
+  note?: string; // Optional note (e.g., "I can bring food")
+  createdAt: number;
+  updatedAt?: number;
+}
+
+/**
+ * Bulletin Post - community announcement, event, or celebration
+ * REQ-GOV-019: Community Bulletin Board
+ *
+ * Supports:
+ * - Announcements (general info)
+ * - Events (with RSVPs and scheduling)
+ * - Celebrations (sharing joy)
+ * - Discussions (open-ended topics)
+ * - Requests (informal coordination)
+ */
+export interface BulletinPost {
+  id: string;
+  communityGroupId?: string; // Optional: post to specific community group
+  userId: string; // Who posted
+  title: string;
+  content: string;
+  postType: BulletinPostType;
+  status: BulletinPostStatus;
+
+  // Event-specific fields (optional, used for event type)
+  eventDetails?: {
+    startTime: number; // Unix timestamp
+    endTime?: number; // Unix timestamp
+    location?: string;
+    isRecurring?: boolean;
+    recurrencePattern?: string; // e.g., "weekly", "monthly"
+  };
+
+  // RSVPs for events
+  rsvps: BulletinRSVP[];
+
+  // Comments on the post
+  comments: BulletinComment[];
+
+  // Interested users (for reminders)
+  interestedUsers: string[];
+
+  // Tags for categorization
+  tags?: string[];
+
+  // Metadata
+  createdAt: number;
+  updatedAt: number;
+  pinnedUntil?: number; // If pinned, when to unpin
+}
+
+/**
+ * Community Event types
+ * REQ-GOV-019: Community Bulletin Board - Community events listing
+ */
+export type CommunityEventType =
+  | 'potluck'         // Community meals
+  | 'workday'         // Garden work, maintenance, cleanup
+  | 'workshop'        // Learning events, skill shares
+  | 'meeting'         // Decision-making, planning
+  | 'celebration'     // Birthdays, harvests, holidays
+  | 'social'          // Casual gatherings, games
+  | 'mutual-aid'      // Collective support events
+  | 'other';
+
+export type EventRSVPStatus = 'going' | 'maybe' | 'not-going';
+
+/**
+ * RSVP for a community event
+ * REQ-GOV-019: Enable RSVPs and coordination
+ */
+export interface CommunityEventRSVP {
+  userId: string;
+  status: EventRSVPStatus;
+  note?: string;          // e.g., "I can bring a dish"
+  bringingItems?: string[]; // e.g., ["salad", "drinks"]
+  respondedAt: number;
+}
+
+/**
+ * Comment on a community event
+ * REQ-GOV-019: Support comment threads
+ */
+export interface CommunityEventComment {
+  id: string;
+  userId: string;
+  text: string;
+  createdAt: number;
+}
+
+/**
+ * Community Event
+ * REQ-GOV-019: Community Bulletin Board - Community events listing
+ *
+ * Supports:
+ * - Event creation and details
+ * - RSVPs and coordination
+ * - Location (physical or virtual)
+ * - Items to bring
+ * - Volunteer coordination
+ * - Comments and discussion
+ */
+export interface CommunityEvent {
+  id: string;
+  title: string;
+  description: string;
+  eventType: CommunityEventType;
+
+  // Timing
+  startTime: number;      // Unix timestamp
+  endTime?: number;       // Optional end time
+  isAllDay?: boolean;     // All-day event flag
+
+  // Location
+  location?: {
+    name: string;         // e.g., "Community Garden"
+    address?: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
+    isVirtual?: boolean;
+    virtualLink?: string;
+  };
+
+  // Organizer and association
+  organizerId: string;
+  communityGroupId?: string;
+
+  // RSVPs
+  rsvps: CommunityEventRSVP[];
+  maxAttendees?: number;
+
+  // Coordination
+  bringItems?: string[];  // Suggested items to bring
+  needsVolunteers?: boolean;
+  volunteerRoles?: string[];
+  coordinationNotes?: string;
+
+  // Accessibility
+  accessibilityInfo?: string;
+
+  // Comments
+  comments: CommunityEventComment[];
+
+  // Reminders
+  reminderSent?: boolean;
+
+  // Metadata
+  createdAt: number;
+  updatedAt: number;
+  status: 'draft' | 'published' | 'cancelled' | 'completed';
+  visibility: 'public' | 'community' | 'private';
 }
 
 /**

@@ -24,8 +24,8 @@ describe('Resource Sharing', () => {
   const testUserId2 = 'user-bob';
 
   beforeEach(async () => {
-    // Reset database before each test
-    await db.init();
+    // Reset database before each test to ensure clean state
+    await db.reset();
   });
 
   describe('postItemToShare', () => {
