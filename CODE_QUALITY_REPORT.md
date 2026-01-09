@@ -1,7 +1,7 @@
 # Code Quality Review Report
 
-**Generated:** 2026-01-09 23:00:01 UTC
-**Total Issues Found:** 96
+**Generated:** 2026-01-09 23:30:01 UTC
+**Total Issues Found:** 105
 
 ---
 
@@ -46,7 +46,7 @@ src/crypto/keys.ts:161:  const privateKey = xorEncrypt(ciphertext, key);
 
 ---
 
-## 🎭 Fake/Mock Implementations (53)
+## 🎭 Fake/Mock Implementations (57)
 
 Production code containing fake, mock, or temporary implementations:
 
@@ -61,6 +61,9 @@ src/resources/resource-browser-ui.ts:104:        placeholder="Search for items..
 src/resources/need-browser-ui.ts:145:        placeholder="Search community needs..."
 src/resources/resource-request-ui.ts:75:          placeholder="Search items..."
 src/resources/resource-request-ui.ts:141:              placeholder="Let them know why you need it or when you'd like to pick it up..."
+src/resources/equipment-booking-ui.ts:275:            placeholder="What will you use this for?"
+src/resources/equipment-booking-ui.ts:286:            placeholder="Where will you pick this up?"
+src/resources/equipment-booking-ui.ts:297:            placeholder="Any other details..."
 src/resources/resource-status-ui.ts:161:              placeholder="e.g., Electric Drill, Ladder, Garden Tools"
 src/resources/resource-status-ui.ts:189:              <option value="lend">Lend (temporary use)</option>
 src/resources/resource-status-ui.ts:200:              placeholder="e.g., Downtown co-op, North garden"
@@ -77,6 +80,7 @@ src/governance/bulletin-board-ui.ts:328:              placeholder="Share your me
 src/governance/bulletin-board-ui.ts:337:           placeholder="Where is this happening?">
 src/governance/bulletin-board-ui.ts:343:           placeholder="e.g., garden, potluck, volunteer">
 src/governance/bulletin-board-ui.ts:397:           placeholder="e.g., I can bring food">
+src/timebank/request-help.ts:88:  // volunteerId starts as empty/placeholder since no volunteer yet
 src/care/care-circles-ui.ts:326:            placeholder="e.g., Support for Maria"
 src/care/care-circles-ui.ts:336:            placeholder="What kind of support is needed?"
 src/care/care-circles-ui.ts:414:            placeholder="user-12345..."
@@ -97,16 +101,12 @@ src/crypto/keys.ts:102: * Simple XOR-based encryption (temporary - will be repla
 src/crypto/keys.ts:104: * NOTE: This is a placeholder. In production, use a proper AEAD cipher.
 src/crypto/keys.ts:133:  // Temporary XOR encryption - TODO: Replace with XChaCha20-Poly1305
 src/crypto/keys.ts:160:  // Temporary XOR decryption - TODO: Replace with XChaCha20-Poly1305
-src/ui/need-posting-ui.ts:65:              placeholder="Describe what you need... (e.g., 'Looking for a bicycle', 'Need help moving furniture', 'Could use some warm clothes')"
-src/main-integrated.ts:80:        <input type="text" id="display-name" required placeholder="How you'd like to be known">
-src/main-integrated.ts:86:               placeholder="To protect your identity (min 8 chars)">
-src/main-integrated.ts:93:               placeholder="Type it again to confirm">
-... and 3 more
+... and 7 more
 ```
 
 ---
 
-## 📝 TODO/FIXME Comments (27)
+## 📝 TODO/FIXME Comments (31)
 
 Outstanding work items marked in code:
 
@@ -115,9 +115,9 @@ src/identity/identity-service.ts:71:    // TODO: This should be stored securely
 src/identity/identity-service.ts:293:    // TODO: Look up issuer's public key from their DID
 src/identity/IdentityManager.ts:248:      // TODO: Add deleteUserProfile method to database
 src/core/AppManager.ts:169:      // TODO: Trigger sync if network is enabled
-src/core/database.ts:1246:      lastSyncTime: 0, // TODO: Track actual sync times
-src/core/database.ts:1247:      pendingChanges: 0, // TODO: Track pending changes
-src/core/database.ts:1249:      connectedPeers: 0, // TODO: Track peer connections
+src/core/database.ts:1431:      lastSyncTime: 0, // TODO: Track actual sync times
+src/core/database.ts:1432:      pendingChanges: 0, // TODO: Track pending changes
+src/core/database.ts:1434:      connectedPeers: 0, // TODO: Track peer connections
 src/network/SecureNetworkManager.ts:207:        displayName: 'Anonymous', // TODO: Get from privacy settings
 src/network/dtn/DTNManager.ts:82:      source: 'self', // TODO: Use actual peer ID
 src/network/dtn/DTNManager.ts:160:      // TODO: Handle bundle contents (e.g., sync data, messages)
@@ -130,6 +130,10 @@ src/network/adapters/MeshtasticAdapter.ts:184:        signalStrength: undefined 
 src/network/adapters/BluetoothAdapter.ts:281:    // TODO: Use more efficient binary protocol (Protocol Buffers, MessagePack, etc.)
 src/data/document-manager.ts:217:    // TODO: Load per-peer sync state from storage
 src/timebank/skill-offer.ts:215:  // TODO: Add deleteSkill method to database when implementing full CRUD
+src/timebank/request-help.ts:124:    // TODO: When AI matchmaking is implemented (REQ-TIME-012), notify potential volunteers
+src/timebank/request-help.ts:390:    // TODO: Notify the recipient that someone accepted (REQ-TIME-016)
+src/timebank/request-help.ts:430:    // TODO: Send confirmation notifications (REQ-TIME-016)
+src/timebank/schedule-help-sessions.ts:428:  // TODO: Use duration parameter to filter time slots that are long enough
 src/care/check-in.ts:308:  const userId = 'user-1'; // TODO: Get from auth
 src/care/care-circles.ts:273:  // TODO: In Phase 10, use AI to match skills, availability, and load balance
 src/export/export.ts:158:          // TODO: Validate and merge imported data
@@ -153,13 +157,14 @@ src/resources/resource-status-example.ts:41:    publicKey: 'mock-public-key-2',
 
 ---
 
-## 📦 Placeholder Comments (2)
+## 📦 Placeholder Comments (3)
 
 Comments indicating placeholder code:
 
 ```
 src/resources/photo-upload-example.ts:316:    // Placeholder if no photo
 src/network/adapters/MeshtasticAdapter.ts:213:    // This is a placeholder that assumes a simple format
+src/timebank/request-help.ts:88:  // volunteerId starts as empty/placeholder since no volunteer yet
 ```
 
 ---
