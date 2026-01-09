@@ -45,6 +45,17 @@ export default defineConfig({
       }
     })
   ],
+  optimizeDeps: {
+    include: [
+      '@noble/hashes/utils',
+      '@noble/curves/ed25519',
+      '@noble/ed25519',
+      '@scure/bip39'
+    ],
+    esbuildOptions: {
+      target: 'es2020'
+    }
+  },
   build: {
     target: 'es2020',
     outDir: 'dist',
