@@ -7,7 +7,7 @@
 
 import * as Automerge from '@automerge/automerge';
 import { openDB, type IDBPDatabase } from 'idb';
-import type { DatabaseSchema, Resource, Need, SkillOffer, AvailabilitySlot, EconomicEvent, UserProfile, Community, CommunityGroup, SyncStatus, CheckIn, CheckInStatus, CareCircle, CareActivity, MissedCheckInAlert, EmergencyAlert, BulletinPost, BulletinComment, BulletinRSVP, RSVPResponse, CommunityEvent, CommunityEventRSVP, EventRSVPStatus, CommunityEventComment, CommunityEventType, ContributionRecord, BurnoutAssessment } from '../types';
+import type { DatabaseSchema, Resource, Need, SkillOffer, AvailabilitySlot, HelpSession, EquipmentBooking, EconomicEvent, UserProfile, Community, CommunityGroup, SyncStatus, CheckIn, CheckInStatus, CareCircle, CareActivity, MissedCheckInAlert, EmergencyAlert, BulletinPost, BulletinComment, BulletinRSVP, RSVPResponse, CommunityEvent, CommunityEventRSVP, EventRSVPStatus, CommunityEventComment, CommunityEventType, ContributionRecord, BurnoutAssessment, GratitudeExpression } from '../types';
 
 const DB_NAME = 'solarpunk-utopia';
 const DB_VERSION = 1;
@@ -127,6 +127,22 @@ export class LocalDatabase {
         await this.save();
       }
 
+      // Migrate: Add helpSessions if it doesn't exist
+      if (!this.doc.helpSessions) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.helpSessions = {};
+        });
+        await this.save();
+      }
+
+      // Migrate: Add equipmentBookings if it doesn't exist
+      if (!this.doc.equipmentBookings) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.equipmentBookings = {};
+        });
+        await this.save();
+      }
+
       // Migrate: Add contributions if it doesn't exist
       if (!this.doc.contributions) {
         this.doc = Automerge.change(this.doc, (doc) => {
@@ -173,6 +189,8 @@ export class LocalDatabase {
         needs: {},
         skills: {},
         availabilitySlots: {},
+        helpSessions: {},
+        equipmentBookings: {},
         events: {},
         users: {},
         community: {
@@ -386,6 +404,130 @@ export class LocalDatabase {
 
   listAvailabilitySlots(): AvailabilitySlot[] {
     return Object.values(this.getDoc().availabilitySlots);
+  }
+
+  // ===== Help Session Operations =====
+
+  async addHelpSession(session: Omit<HelpSession, 'id' | 'createdAt' | 'updatedAt'>): Promise<HelpSession> {
+    const newSession: HelpSession = {
+      ...session,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    // Remove undefined values for Automerge compatibility
+    const cleanSession: any = { ...newSession };
+    Object.keys(cleanSession).forEach(key => {
+      if (cleanSession[key] === undefined) {
+        delete cleanSession[key];
+      }
+    });
+
+    await this.update((doc) => {
+      doc.helpSessions[newSession.id] = cleanSession;
+    });
+
+    return cleanSession as HelpSession;
+  }
+
+  async updateHelpSession(id: string, updates: Partial<HelpSession>): Promise<void> {
+    await this.update((doc) => {
+      if (doc.helpSessions[id]) {
+        Object.assign(doc.helpSessions[id], updates, { updatedAt: Date.now() });
+      }
+    });
+  }
+
+  getHelpSession(id: string): HelpSession | undefined {
+    return this.getDoc().helpSessions[id];
+  }
+
+  listHelpSessions(): HelpSession[] {
+    return Object.values(this.getDoc().helpSessions);
+  }
+
+  getHelpSessionsByVolunteer(volunteerId: string): HelpSession[] {
+    return this.listHelpSessions().filter(session => session.volunteerId === volunteerId);
+  }
+
+  getHelpSessionsByRecipient(recipientId: string): HelpSession[] {
+    return this.listHelpSessions().filter(session => session.recipientId === recipientId);
+  }
+
+  getHelpSessionsByUser(userId: string): HelpSession[] {
+    return this.listHelpSessions().filter(
+      session => session.volunteerId === userId || session.recipientId === userId
+    );
+  }
+
+  getUpcomingHelpSessions(userId?: string): HelpSession[] {
+    const now = Date.now();
+    let sessions = this.listHelpSessions().filter(
+      session => session.scheduledDate >= now &&
+                 (session.status === 'pending' || session.status === 'confirmed')
+    );
+
+    if (userId) {
+      sessions = sessions.filter(
+        session => session.volunteerId === userId || session.recipientId === userId
+      );
+    }
+
+    return sessions.sort((a, b) => a.scheduledDate - b.scheduledDate);
+  }
+
+  // ===== Equipment Booking Operations =====
+
+  async addEquipmentBooking(booking: Omit<EquipmentBooking, 'id' | 'createdAt' | 'updatedAt'>): Promise<EquipmentBooking> {
+    const newBooking: EquipmentBooking = {
+      ...booking,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    // Remove undefined values for Automerge compatibility
+    const cleanBooking: any = { ...newBooking };
+    Object.keys(cleanBooking).forEach(key => {
+      if (cleanBooking[key] === undefined) {
+        delete cleanBooking[key];
+      }
+    });
+
+    await this.update((doc) => {
+      doc.equipmentBookings[newBooking.id] = cleanBooking;
+    });
+
+    return cleanBooking as EquipmentBooking;
+  }
+
+  async updateEquipmentBooking(id: string, updates: Partial<EquipmentBooking>): Promise<void> {
+    await this.update((doc) => {
+      if (doc.equipmentBookings[id]) {
+        Object.assign(doc.equipmentBookings[id], updates, { updatedAt: Date.now() });
+      }
+    });
+  }
+
+  getEquipmentBooking(id: string): EquipmentBooking | undefined {
+    return this.getDoc().equipmentBookings[id];
+  }
+
+  listEquipmentBookings(): EquipmentBooking[] {
+    return Object.values(this.getDoc().equipmentBookings);
+  }
+
+  getEquipmentBookingsByResource(resourceId: string): EquipmentBooking[] {
+    return this.listEquipmentBookings()
+      .filter(booking => booking.resourceId === resourceId)
+      .sort((a, b) => a.startTime - b.startTime);
+  }
+
+  getEquipmentBookingsByUser(userId: string): EquipmentBooking[] {
+    return this.listEquipmentBookings()
+      .filter(booking => booking.userId === userId)
+      .sort((a, b) => a.startTime - b.startTime);
   }
 
   // ===== Event Operations =====
@@ -1210,6 +1352,49 @@ export class LocalDatabase {
     return Object.values(this.getDoc().burnoutAssessments || {});
   }
 
+  // ===== Gratitude Operations =====
+  // REQ-TIME-022: Recognition Without Hierarchy
+  // REQ-TIME-018: Experience Sharing
+
+  /**
+   * Add a gratitude expression
+   */
+  async addGratitude(gratitude: Omit<GratitudeExpression, 'id' | 'createdAt'>): Promise<GratitudeExpression> {
+    const newGratitude: GratitudeExpression = {
+      ...gratitude,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+    };
+
+    // Remove undefined values for Automerge compatibility
+    const cleanGratitude: any = { ...newGratitude };
+    Object.keys(cleanGratitude).forEach(key => {
+      if (cleanGratitude[key] === undefined) {
+        delete cleanGratitude[key];
+      }
+    });
+
+    await this.update((doc) => {
+      doc.gratitude[newGratitude.id] = cleanGratitude;
+    });
+
+    return cleanGratitude as GratitudeExpression;
+  }
+
+  /**
+   * Get a gratitude expression by ID
+   */
+  getGratitude(id: string): GratitudeExpression | undefined {
+    return this.getDoc().gratitude[id];
+  }
+
+  /**
+   * List all gratitude expressions
+   */
+  listGratitude(): GratitudeExpression[] {
+    return Object.values(this.getDoc().gratitude || {});
+  }
+
   // ===== Sync Operations =====
 
   /**
@@ -1266,6 +1451,8 @@ export class LocalDatabase {
       needs: {},
       skills: {},
       availabilitySlots: {},
+      helpSessions: {},
+      equipmentBookings: {},
       contributions: {},
       events: {},
       users: {},

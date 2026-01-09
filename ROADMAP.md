@@ -147,7 +147,7 @@ For each feature: *"Does this increase community autonomy, or create new depende
 |---------|------------|------------|-----|----------------|--------|
 | Offer skills/time | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Browse available skills | Simple | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
-| Request help | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | time-bank.md |
+| Request help | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Skills categories | Simple | ✊✊ | 🌻🌻 | time-bank.md |
 | Thank you / appreciation notes | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md |
 
@@ -156,7 +156,7 @@ For each feature: *"Does this increase community autonomy, or create new depende
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
 | Availability calendar | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
-| Schedule help sessions | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md |
+| Schedule help sessions | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Shift volunteering | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md |
 | Shift swapping | Medium | ✊✊✊ | 🌻🌻🌻🌻 | time-bank.md |
 | Coverage finding | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md |
@@ -166,7 +166,7 @@ For each feature: *"Does this increase community autonomy, or create new depende
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
 | Tool library | Simple | ✊✊✊✊ | 🌻🌻🌻🌻 | resource-sharing.md | ✅ DONE |
-| Equipment booking | Medium | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md |
+| Equipment booking | Medium | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md | ✅ DONE |
 | Item pickup coordination | Medium | ✊✊✊ | 🌻🌻🌻 | resource-sharing.md |
 | Usage guidelines per item | Simple | ✊✊ | 🌻🌻 | resource-sharing.md |
 
@@ -175,7 +175,7 @@ For each feature: *"Does this increase community autonomy, or create new depende
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
 | Community contribution tracking | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
-| Gratitude wall | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md |
+| Gratitude wall | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md | ✅ DONE |
 | "Random acts of kindness" log | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md |
 | Burnout prevention tracking | Medium | ✊✊✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md |
 

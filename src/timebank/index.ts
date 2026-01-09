@@ -44,6 +44,26 @@ export type {
   SkillStatistics,
 } from './browse-skills';
 
+// Request Help (REQ-TIME-006, REQ-TIME-008)
+export {
+  createHelpRequest,
+  updateHelpRequest,
+  cancelHelpRequest,
+  getMyHelpRequests,
+  getOpenHelpRequests,
+  getUrgentHelpRequests,
+  getHelpRequestsBySkill,
+  searchHelpRequests,
+  acceptHelpRequest,
+  confirmHelpSession as confirmHelpRequest,
+  formatHelpRequestForDisplay,
+} from './request-help';
+
+export type {
+  CreateHelpRequestOptions,
+  HelpRequestUrgency,
+} from './request-help';
+
 // Availability Calendar (REQ-TIME-016)
 export {
   createAvailability,
@@ -66,6 +86,29 @@ export type {
   RecurrencePattern,
   TimeRange,
 } from './availability-calendar';
+
+// Schedule Help Sessions (REQ-TIME-016)
+export {
+  scheduleHelpSession,
+  confirmHelpSession,
+  cancelHelpSession,
+  rescheduleHelpSession,
+  startHelpSession,
+  completeHelpSession,
+  expressGratitude,
+  getHelpSession,
+  getUserHelpSessions,
+  getUpcomingHelpSessions,
+  getHelpSessionsByStatus,
+  getHelpSessionsForDate,
+  hasSessionConflict,
+  findAvailableTimeSlots,
+  formatHelpSessionForDisplay,
+} from './schedule-help-sessions';
+
+export type {
+  ScheduleHelpSessionOptions,
+} from './schedule-help-sessions';
 
 // Community Contribution Tracking (REQ-TIME-002, REQ-TIME-019 to REQ-TIME-022)
 export {

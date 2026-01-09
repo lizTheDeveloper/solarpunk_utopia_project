@@ -135,6 +135,81 @@ export interface AvailabilitySlot {
 }
 
 /**
+ * Session Status - lifecycle of a help session
+ * REQ-TIME-016: Communication and Confirmation
+ */
+export type HelpSessionStatus =
+  | 'proposed'      // Initial match proposed by system or user
+  | 'pending'       // Awaiting confirmation from both parties
+  | 'confirmed'     // Both parties confirmed
+  | 'in-progress'   // Session is happening now
+  | 'completed'     // Session finished successfully
+  | 'cancelled'     // Session cancelled by either party
+  | 'no-show';      // Someone didn't show up
+
+/**
+ * Help Session - scheduled interaction between volunteer and recipient
+ * REQ-TIME-016: Communication and Confirmation
+ *
+ * Coordinates tutoring, skill sharing, repairs, or any time-based help
+ * between community members in a gift economy framework.
+ */
+export interface HelpSession {
+  id: string;
+
+  // Participants
+  volunteerId: string;           // Person offering help
+  recipientId: string;           // Person receiving help
+
+  // What help is being provided
+  skillOfferId?: string;         // Optional: link to skill offer
+  title: string;                 // e.g., "Math tutoring", "Bike repair"
+  description?: string;          // Details about what will be covered
+
+  // When
+  scheduledDate: number;         // Unix timestamp for session date
+  scheduledTime: TimeRange;      // Time window for the session
+  estimatedDuration?: number;    // Expected duration in minutes
+
+  // Where
+  location: {
+    type: 'volunteer-place' | 'recipient-place' | 'community-space' | 'virtual' | 'flexible';
+    details?: string;            // Address, room name, video link, etc.
+  };
+
+  // Status and confirmation
+  status: HelpSessionStatus;
+  volunteerConfirmed: boolean;
+  recipientConfirmed: boolean;
+
+  // Coordination
+  notes?: string;                // Session-specific notes (materials needed, etc.)
+  reminders?: {
+    volunteer: boolean;          // Reminder sent to volunteer
+    recipient: boolean;          // Reminder sent to recipient
+    lastReminderSent?: number;   // Timestamp of last reminder
+  };
+
+  // Follow-up (gift economy - gratitude, not ratings!)
+  completionNotes?: {
+    volunteerFeedback?: string;  // How did it go for the volunteer?
+    recipientFeedback?: string;  // How did it go for the recipient?
+    gratitudeExpressed?: boolean; // Did recipient express thanks?
+  };
+
+  // Rescheduling
+  rescheduledFrom?: string;      // ID of previous session if this is a reschedule
+  rescheduledTo?: string;        // ID of new session if this was rescheduled
+
+  // Metadata
+  createdAt: number;
+  updatedAt: number;
+  cancelledAt?: number;
+  cancelledBy?: string;          // userId who cancelled
+  cancellationReason?: string;
+}
+
+/**
  * Economic Event - represents an action/exchange in the community
  * Based on Value Flows EconomicEvent
  */
@@ -261,6 +336,32 @@ export interface CommunityGroup {
 }
 
 /**
+ * Booking status lifecycle for equipment bookings
+ * REQ-SHARE-002: Tools and Equipment Access
+ * REQ-SHARE-012: Resource Availability Calendars
+ */
+export type BookingStatus = 'pending' | 'confirmed' | 'active' | 'completed' | 'cancelled';
+
+/**
+ * Equipment Booking - scheduled reservation of tools/equipment
+ * REQ-SHARE-002: Tools and Equipment Access
+ * REQ-SHARE-012: Resource Availability Calendars
+ */
+export interface EquipmentBooking {
+  id: string;
+  resourceId: string;
+  userId: string;
+  startTime: number; // Unix timestamp
+  endTime: number; // Unix timestamp
+  status: BookingStatus;
+  purpose?: string; // Optional description of what they'll use it for
+  pickupLocation?: string;
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
  * Local database schema - all collections
  */
 export interface DatabaseSchema {
@@ -268,6 +369,8 @@ export interface DatabaseSchema {
   needs: Record<string, Need>;
   skills: Record<string, SkillOffer>;
   availabilitySlots: Record<string, AvailabilitySlot>;
+  helpSessions: Record<string, HelpSession>;
+  equipmentBookings: Record<string, EquipmentBooking>;
   events: Record<string, EconomicEvent>;
   users: Record<string, UserProfile>;
   community: Community;
