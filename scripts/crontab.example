@@ -1,0 +1,140 @@
+# Example Crontab for Solarpunk Platform Code Quality Reviews
+#
+# To install:
+# 1. Copy this file: cp scripts/crontab.example ~/solarpunk.crontab
+# 2. Edit paths: sed -i 's|/path/to/solarpunk_utopia_project|'$(pwd)'|g' ~/solarpunk.crontab
+# 3. Install: crontab ~/solarpunk.crontab
+# 4. Verify: crontab -l
+#
+# To append to existing crontab:
+#   crontab -l > ~/current.cron
+#   cat scripts/crontab.example >> ~/current.cron
+#   crontab ~/current.cron
+#
+# Cron format: minute hour day month weekday command
+# Examples:
+#   0 9 * * 1     = Every Monday at 9 AM
+#   0 */6 * * *   = Every 6 hours
+#   0 0 1 * *     = First day of each month at midnight
+
+# ============================================================================
+# CHANGE THIS: Set your project path
+# ============================================================================
+PROJECT_PATH=/path/to/solarpunk_utopia_project
+
+# ============================================================================
+# Weekly Code Quality Review (Recommended)
+# Runs every Monday at 9 AM, updates roadmap, auto-commits
+# ============================================================================
+0 9 * * 1 cd $PROJECT_PATH && ./scripts/review-code-quality.sh --quiet --update-roadmap --auto-commit 2>&1 | logger -t solarpunk-review
+
+# ============================================================================
+# Daily Report Generation (No Commits)
+# Runs every day at 6 AM, generates report only
+# ============================================================================
+# 0 6 * * * cd $PROJECT_PATH && ./scripts/review-code-quality.sh --quiet 2>&1 | logger -t solarpunk-review
+
+# ============================================================================
+# Pre-Weekend Review (Friday Afternoon)
+# Runs every Friday at 5 PM, updates roadmap for weekend review
+# ============================================================================
+# 0 17 * * 5 cd $PROJECT_PATH && ./scripts/review-code-quality.sh --update-roadmap 2>&1 | mail -s "Weekend Code Review" dev@solarpunk.local
+
+# ============================================================================
+# Monthly Deep Review (First Monday of Month)
+# Runs first Monday at 9 AM with historical report
+# ============================================================================
+# 0 9 1-7 * 1 cd $PROJECT_PATH && ./scripts/review-code-quality.sh --output reports/monthly-$(date +\%Y-\%m).md --update-roadmap --auto-commit 2>&1 | logger -t solarpunk-review
+
+# ============================================================================
+# Bi-weekly Sprint Review (Every Other Monday)
+# Runs on odd weeks at 10 AM
+# ============================================================================
+# 0 10 * * 1 [ $(($(date +\%U) \% 2)) -eq 1 ] && cd $PROJECT_PATH && ./scripts/review-code-quality.sh --update-roadmap 2>&1 | logger -t solarpunk-review
+
+# ============================================================================
+# Continuous Monitoring (Every 4 Hours, Report Only)
+# Good for active development periods
+# ============================================================================
+# 0 */4 * * * cd $PROJECT_PATH && ./scripts/review-code-quality.sh --quiet --output /tmp/code-quality-latest.md 2>&1 | logger -t solarpunk-review
+
+# ============================================================================
+# Git Pull Before Review (For Shared Repositories)
+# Pulls latest changes, then runs review
+# ============================================================================
+# 0 8 * * 1 cd $PROJECT_PATH && git pull origin main && ./scripts/review-code-quality.sh --quiet --update-roadmap --auto-commit 2>&1 | logger -t solarpunk-review
+
+# ============================================================================
+# Environment Variables for Cron
+# ============================================================================
+# Cron has a minimal environment. Set paths if needed:
+# PATH=/usr/local/bin:/usr/bin:/bin
+# SHELL=/bin/bash
+# HOME=/home/youruser
+
+# ============================================================================
+# Email Results (Requires Mail Configuration)
+# ============================================================================
+# Uncomment MAILTO to receive cron output via email:
+# MAILTO=dev@solarpunk.local
+
+# ============================================================================
+# Logging Options
+# ============================================================================
+# Option 1: System logger (recommended)
+#   2>&1 | logger -t solarpunk-review
+#
+# Option 2: File logging
+#   >> /var/log/solarpunk-review.log 2>&1
+#
+# Option 3: Separate error log
+#   >> /var/log/solarpunk-review.log 2>> /var/log/solarpunk-review-error.log
+#
+# Option 4: Email on error only
+#   || mail -s "Code Review Failed" admin@solarpunk.local
+
+# ============================================================================
+# Troubleshooting
+# ============================================================================
+# If cron jobs aren't running:
+#
+# 1. Check cron service is running:
+#    sudo service cron status  # or: systemctl status cron
+#
+# 2. Check cron logs:
+#    grep CRON /var/log/syslog  # Debian/Ubuntu
+#    tail -f /var/log/cron      # RedHat/CentOS
+#
+# 3. Test your command manually:
+#    cd $PROJECT_PATH && ./scripts/review-code-quality.sh --quiet
+#
+# 4. Check file permissions:
+#    ls -la scripts/review-code-quality.sh  # Should be executable
+#
+# 5. Check PATH in cron:
+#    * * * * * echo $PATH > /tmp/cron-path.txt
+#
+# 6. Enable email output temporarily (comment MAILTO):
+#    # MAILTO=
+#    Remove the redirect: don't use 2>&1 | logger
+
+# ============================================================================
+# Examples for Different Workflows
+# ============================================================================
+
+# Solo Developer (Weekly Review):
+# 0 9 * * 1 cd $PROJECT_PATH && ./scripts/review-code-quality.sh --update-roadmap --auto-commit 2>&1 | logger -t solarpunk
+
+# Small Team (Daily Reports, Weekly Commits):
+# 0 6 * * * cd $PROJECT_PATH && ./scripts/review-code-quality.sh --quiet 2>&1 | logger -t solarpunk
+# 0 9 * * 1 cd $PROJECT_PATH && ./scripts/review-code-quality.sh --update-roadmap --auto-commit 2>&1 | logger -t solarpunk
+
+# Large Team (Pull, Review, Push):
+# 0 8 * * 1 cd $PROJECT_PATH && git pull && ./scripts/review-code-quality.sh --update-roadmap --auto-commit && git push 2>&1 | logger -t solarpunk
+
+# CI/CD Integration (Report Only, No Commits):
+# 0 */6 * * * cd $PROJECT_PATH && ./scripts/review-code-quality.sh --quiet --output /var/www/reports/quality.md 2>&1 | logger -t solarpunk
+
+# ============================================================================
+# End of Example Crontab
+# ============================================================================
