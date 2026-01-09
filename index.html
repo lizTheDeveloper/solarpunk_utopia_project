@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Community-based resource sharing and mutual aid platform">
+  <meta name="theme-color" content="#2D5016">
+  <title>Solarpunk Utopia Platform</title>
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <h1>🌻 Solarpunk Utopia</h1>
+      <div class="sync-status">
+        <span id="sync-indicator" class="offline">●</span>
+        <span id="sync-text">Offline</span>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <nav class="tabs">
+        <button class="tab active" data-view="care">Care</button>
+        <button class="tab" data-view="resources">Resources</button>
+        <button class="tab" data-view="needs">Needs</button>
+        <button class="tab" data-view="skills">Skills</button>
+        <button class="tab" data-view="community">Community</button>
+      </nav>
+
+      <div id="care-view" class="view active">
+        <div class="view-header">
+          <h2>Community Care</h2>
+        </div>
+        <div id="care-content">
+          <!-- Check-in content will be rendered here -->
+        </div>
+      </div>
+
+      <div id="resources-view" class="view">
+        <div class="view-header">
+          <h2>Community Resources</h2>
+          <button id="add-resource-btn" class="btn-primary">+ Add Resource</button>
+        </div>
+        <div id="resources-list" class="items-list">
+          <!-- Resources will be rendered here -->
+        </div>
+      </div>
+
+      <div id="needs-view" class="view">
+        <div class="view-header">
+          <h2>Community Needs</h2>
+          <button id="add-need-btn" class="btn-primary">+ Post Need</button>
+        </div>
+        <div id="needs-list" class="items-list">
+          <!-- Needs will be rendered here -->
+        </div>
+      </div>
+
+      <div id="skills-view" class="view">
+        <div class="view-header">
+          <h2>Skills & Time Bank</h2>
+          <button id="add-skill-btn" class="btn-primary">+ Offer Skill</button>
+        </div>
+        <div id="skills-list" class="items-list">
+          <!-- Skills will be rendered here -->
+        </div>
+      </div>
+
+      <div id="community-view" class="view">
+        <div class="view-header">
+          <h2>Community Info</h2>
+        </div>
+        <div id="community-info" class="community-info">
+          <!-- Community info will be rendered here -->
+        </div>
+        <div class="data-controls">
+          <h3>Data Sovereignty</h3>
+          <button id="export-json-btn" class="btn-secondary">Export as JSON</button>
+          <button id="export-csv-btn" class="btn-secondary">Export Resources CSV</button>
+          <button id="export-binary-btn" class="btn-secondary">Download Backup</button>
+          <div class="import-section">
+            <label for="import-file" class="btn-secondary">Import Data</label>
+            <input type="file" id="import-file" accept=".json,.automerge" style="display: none;">
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <p>🌱 Liberation infrastructure for the new world in the shell of the old ✊</p>
+      <p><small>Offline-first • Privacy-preserving • Community-owned</small></p>
+    </footer>
+  </div>
+
+  <!-- Modal for adding resources -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

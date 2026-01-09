@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="description" content="Infrastructure for building post-scarcity communities based on mutual aid, gift economy, and resource sharing">
+  <meta name="theme-color" content="#4a9d5f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Solarpunk">
+
+  <!-- Minimal data for offline-first -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <title>Solarpunk Utopia Platform</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Icons for iOS -->
+  <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png">
+
+  <!-- Inline critical CSS to avoid render-blocking -->
+  <style>
+    /* Minimal critical styles - inline to avoid network request */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --color-bg: #1a1a1a;
+      --color-fg: #e8e8e8;
+      --color-primary: #4a9d5f;
+      --color-secondary: #7cb342;
+      --color-accent: #ffa726;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --spacing-unit: 1rem;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-bg);
+      color: var(--color-fg);
+      line-height: 1.6;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Minimal layout */
+    #app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Loading state */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      flex-direction: column;
+      gap: var(--spacing-unit);
+    }
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--color-primary);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .status-text {
+      color: var(--color-primary);
+      font-size: 0.9rem;
+    }
+
+    /* Offline indicator */
+    .offline-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--color-accent);
+      color: var(--color-bg);
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 0.875rem;
+      z-index: 9999;
+      transform: translateY(-100%);
+      transition: transform 0.3s ease;
+    }
+
+    .offline-banner.visible {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <!-- Offline indicator -->
+  <div id="offline-banner" class="offline-banner" role="alert" aria-live="polite">
+    Offline mode - data will sync when connection returns
+  </div>
+
+  <!-- Main app container -->
+  <div id="app">
+    <!-- Initial loading state -->
+    <div class="loading">
+      <div class="loading-spinner" role="status" aria-label="Loading"></div>
+      <p class="status-text">Loading Solarpunk Platform...</p>
+      <noscript>
+        <p style="color: var(--color-accent);">
+          This platform requires JavaScript. Please enable JavaScript in your browser.
+        </p>
+      </noscript>
+    </div>
+  </div>
+
+  <!-- Service Worker Registration - inline to execute immediately -->
+  <script>
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registered:', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('ServiceWorker registration failed:', error);
+          });
+      });
+    }
+
+    // Offline/online status monitoring
+    function updateOnlineStatus() {
+      var banner = document.getElementById('offline-banner');
+      if (!navigator.onLine) {
+        banner.classList.add('visible');
+      } else {
+        banner.classList.remove('visible');
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+  </script>
+
+  <!-- Core utilities - load early -->
+  <script src="/scripts/battery-utils.js"></script>
+  <script src="/scripts/db.js"></script>
+  <script src="/scripts/data-export.js"></script>
+
+  <!-- Main application script - defer for performance -->
+  <script src="/scripts/app.js" defer></script>
+</body>
+</html>

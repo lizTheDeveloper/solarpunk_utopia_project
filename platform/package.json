@@ -1,0 +1,55 @@
+{
+  "name": "solarpunk-utopia-platform",
+  "version": "0.1.0",
+  "description": "Liberation infrastructure for building post-scarcity communities based on mutual aid and gift economy",
+  "main": "src/scripts/app.js",
+  "scripts": {
+    "build": "node build.js",
+    "build:prod": "NODE_ENV=production node build.js",
+    "dev": "node -e \"require('http').createServer((req,res)=>{const fs=require('fs'),path=require('path');let p=path.join(__dirname,'src/public',req.url==='/'?'index.html':req.url);fs.access(p,fs.constants.R_OK,e=>{if(e){res.writeHead(404);res.end('404');return;}fs.readFile(p,(e,d)=>{if(e){res.writeHead(500);res.end('500');return;}const ext=path.extname(p);const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json'};res.writeHead(200,{'Content-Type':types[ext]||'text/plain'});res.end(d);});});}).listen(8080,()=>console.log('Dev server: http://localhost:8080'))\"",
+    "serve": "node -e \"require('http').createServer((req,res)=>{const fs=require('fs'),path=require('path');let p=path.join(__dirname,'dist',req.url==='/'?'index.html':req.url);fs.access(p,fs.constants.R_OK,e=>{if(e){res.writeHead(404);res.end('404');return;}fs.readFile(p,(e,d)=>{if(e){res.writeHead(500);res.end('500');return;}const ext=path.extname(p);const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json'};res.writeHead(200,{'Content-Type':types[ext]||'text/plain'});res.end(d);});});}).listen(8080,()=>console.log('Production server: http://localhost:8080'))\"",
+    "test:size": "node -e \"const fs=require('fs'),path=require('path');const dist='dist';const sizes={};function getSize(dir){const files=fs.readdirSync(dir);files.forEach(f=>{const p=path.join(dir,f);const s=fs.statSync(p);if(s.isDirectory()){getSize(p);}else{sizes[path.relative(dist,p)]=s.size;}});}getSize(dist);const total=Object.values(sizes).reduce((a,b)=>a+b,0);console.log('\\nBundle Size Analysis:');console.log('═══════════════════════');Object.entries(sizes).sort((a,b)=>b[1]-a[1]).forEach(([f,s])=>console.log(`${f}: ${(s/1024).toFixed(2)} KB`));console.log('───────────────────────');console.log(`Total: ${(total/1024).toFixed(2)} KB`);console.log(`Target: < 500 KB for core functionality`);console.log(total<512000?'✓ Within target':'⚠ Exceeds target');\"",
+    "clean": "rm -rf dist",
+    "lint": "echo 'No linter configured - keeping dependencies minimal'",
+    "format": "echo 'No formatter configured - keeping dependencies minimal'"
+  },
+  "keywords": [
+    "solarpunk",
+    "mutual-aid",
+    "gift-economy",
+    "offline-first",
+    "pwa",
+    "termux",
+    "liberation-technology"
+  ],
+  "author": "Solarpunk Community",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/solarpunk-utopia-platform"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "peerDependencies": {},
+  "optionalDependencies": {},
+  "config": {
+    "target": {
+      "android": "5.0",
+      "browsers": [
+        "Android >= 5",
+        "Chrome >= 49",
+        "Firefox >= 52",
+        "Safari >= 10",
+        "Edge >= 14"
+      ]
+    },
+    "performance": {
+      "maxBundleSizeKB": 500,
+      "maxInitialLoadKB": 200,
+      "targetLighthouseScore": 90
+    }
+  }
+}
