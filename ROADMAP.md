@@ -181,6 +181,62 @@ For each feature: *"Does this increase community autonomy, or create new depende
 
 ---
 
+## Phase 3.5: Modular Architecture Refactor
+*Breaking up the monolith for scalability and maintainability*
+
+**Why Now?** As the codebase grows, modularity becomes critical for offline-first architecture, selective feature loading, and team scalability. By splitting into independent packages, we enable:
+- **Selective sync**: Offline/mesh nodes can load only needed modules
+- **Faster builds**: Only rebuild changed packages
+- **Clear boundaries**: Enforced separation prevents coupling
+- **Team ownership**: Different teams can own different packages
+
+**The Test**: Can a low-bandwidth community member sync only the features they need? Can modules be deployed independently?
+
+See [MODULARIZATION_PROPOSAL.md](./MODULARIZATION_PROPOSAL.md) for full details.
+
+### Group A: Core Infrastructure Packages
+
+| Task | Complexity | Liberation | Joy | Reference |
+|------|------------|------------|-----|-----------|
+| Audit all imports/exports | Simple | ✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md |
+| Create dependency graph | Simple | ✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md |
+| Break circular dependencies | Medium | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Set up NPM workspaces structure | Simple | ✊✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md |
+| Extract @solarpunk/types package | Simple | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Extract @solarpunk/crypto package | Simple | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+
+### Group B: Database & Identity Packages
+
+| Task | Complexity | Liberation | Joy | Reference |
+|------|------------|------------|-----|-----------|
+| Extract @solarpunk/core package | Medium | ✊✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Extract @solarpunk/identity package | Medium | ✊✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Extract @solarpunk/network package | Medium | ✊✊✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Update all import paths | Medium | ✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md |
+
+### Group C: Feature Module Packages
+
+| Task | Complexity | Liberation | Joy | Reference |
+|------|------------|------------|-----|-----------|
+| Extract @solarpunk/ui package | Simple | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Extract @solarpunk/resources package | Medium | ✊✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Extract @solarpunk/care package | Medium | ✊✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Extract @solarpunk/governance package | Medium | ✊✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Extract @solarpunk/time-bank package | Medium | ✊✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+
+### Group D: Build Configuration & Testing
+
+| Task | Complexity | Liberation | Joy | Reference |
+|------|------------|------------|-----|-----------|
+| Configure TypeScript project references | Medium | ✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md |
+| Update build scripts | Simple | ✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md |
+| Configure per-package testing | Medium | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Verify all tests pass | Simple | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Update CI/CD pipeline | Medium | ✊✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md |
+| Document new package structure | Simple | ✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+
+---
+
 ## Phase 4: Food Security & Gardens
 *Because liberation requires full bellies*
 
