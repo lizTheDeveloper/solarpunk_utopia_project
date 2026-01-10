@@ -140,13 +140,19 @@ export async function createVolunteerShift(options: CreateVolunteerShiftOptions)
   const sanitizedWhatToBring = options.whatToBring?.map(item => sanitizeUserContent(item.trim()));
   const sanitizedSkillsNeeded = options.skillsNeeded?.map(skill => sanitizeUserContent(skill.trim()));
 
-  // Sanitize roles if provided
-  const sanitizedRoles = options.roles?.map(role => ({
-    name: sanitizeUserContent(role.name.trim()),
-    description: role.description ? sanitizeUserContent(role.description.trim()) : undefined,
-    volunteersNeeded: role.volunteersNeeded,
-    volunteersAssigned: [],
-  }));
+  // Sanitize roles if provided (avoiding undefined for Automerge)
+  const sanitizedRoles = options.roles?.map(role => {
+    const sanitizedRole: any = {
+      name: sanitizeUserContent(role.name.trim()),
+      volunteersNeeded: role.volunteersNeeded,
+      volunteersAssigned: [],
+    };
+    // Only add description if it exists (Automerge doesn't allow undefined)
+    if (role.description) {
+      sanitizedRole.description = sanitizeUserContent(role.description.trim());
+    }
+    return sanitizedRole;
+  });
 
   // Build shift object (avoiding undefined for Automerge)
   const shiftData: Omit<VolunteerShift, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -219,30 +225,32 @@ export async function signUpForShift(shiftId: string, userId: string, roleIndex?
       throw new Error(`This role is full (${role.volunteersNeeded} volunteers needed)`);
     }
 
-    // Add to role
-    const updatedRoles = [...shift.roles];
-    updatedRoles[roleIndex] = {
-      ...role,
-      volunteersAssigned: [...role.volunteersAssigned, userId],
-    };
-
-    await db.updateVolunteerShift(shiftId, {
-      volunteersSignedUp: [...shift.volunteersSignedUp, userId],
-      roles: updatedRoles,
+    // Update using direct database method for Automerge-safe array operations
+    await db.update((doc) => {
+      const docShift = doc.volunteerShifts[shiftId];
+      if (docShift && docShift.roles && docShift.roles[roleIndex]) {
+        // Push to existing arrays (Automerge-safe)
+        docShift.volunteersSignedUp.push(userId);
+        docShift.roles[roleIndex].volunteersAssigned.push(userId);
+        docShift.updatedAt = Date.now();
+      }
     });
   } else {
-    // General signup
-    const newVolunteersSignedUp = [...shift.volunteersSignedUp, userId];
-    const updates: Partial<VolunteerShift> = {
-      volunteersSignedUp: newVolunteersSignedUp,
-    };
+    // General signup - use direct database method for Automerge-safe array operations
+    await db.update((doc) => {
+      const docShift = doc.volunteerShifts[shiftId];
+      if (docShift) {
+        // Push to existing array (Automerge-safe)
+        docShift.volunteersSignedUp.push(userId);
 
-    // Check if shift is now filled
-    if (newVolunteersSignedUp.length >= shift.volunteersNeeded) {
-      updates.status = 'filled';
-    }
+        // Check if shift is now filled
+        if (docShift.volunteersSignedUp.length >= docShift.volunteersNeeded) {
+          docShift.status = 'filled';
+        }
 
-    await db.updateVolunteerShift(shiftId, updates);
+        docShift.updatedAt = Date.now();
+      }
+    });
   }
 }
 
@@ -262,29 +270,34 @@ export async function cancelShiftSignup(shiftId: string, userId: string): Promis
     throw new Error('You are not signed up for this shift');
   }
 
-  // Remove from signed up list
-  const newVolunteersSignedUp = shift.volunteersSignedUp.filter(id => id !== userId);
+  // Update using direct database method for Automerge-safe array operations
+  await db.update((doc) => {
+    const docShift = doc.volunteerShifts[shiftId];
+    if (docShift) {
+      // Remove from signed up list using splice (Automerge-safe)
+      const volunteerIndex = docShift.volunteersSignedUp.indexOf(userId);
+      if (volunteerIndex >= 0) {
+        docShift.volunteersSignedUp.splice(volunteerIndex, 1);
+      }
 
-  // Remove from roles if applicable
-  let updatedRoles = shift.roles;
-  if (shift.roles) {
-    updatedRoles = shift.roles.map(role => ({
-      ...role,
-      volunteersAssigned: role.volunteersAssigned.filter(id => id !== userId),
-    }));
-  }
+      // Remove from roles if applicable
+      if (docShift.roles) {
+        for (const role of docShift.roles) {
+          const roleVolunteerIndex = role.volunteersAssigned.indexOf(userId);
+          if (roleVolunteerIndex >= 0) {
+            role.volunteersAssigned.splice(roleVolunteerIndex, 1);
+          }
+        }
+      }
 
-  const updates: Partial<VolunteerShift> = {
-    volunteersSignedUp: newVolunteersSignedUp,
-    ...(updatedRoles && { roles: updatedRoles }),
-  };
+      // If it was filled and now has space, mark as open again
+      if (docShift.status === 'filled' && docShift.volunteersSignedUp.length < docShift.volunteersNeeded) {
+        docShift.status = 'open';
+      }
 
-  // If it was filled and now has space, mark as open again
-  if (shift.status === 'filled' && newVolunteersSignedUp.length < shift.volunteersNeeded) {
-    updates.status = 'open';
-  }
-
-  await db.updateVolunteerShift(shiftId, updates);
+      docShift.updatedAt = Date.now();
+    }
+  });
 }
 
 /**

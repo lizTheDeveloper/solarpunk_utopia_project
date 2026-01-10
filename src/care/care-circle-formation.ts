@@ -15,6 +15,7 @@ import { db } from '../core/database';
 import type { CareCircle, UserProfile } from '../types';
 import { setupCareCircle, getCareCircle, disableCheckInMonitoring, enableCheckInMonitoring } from './missed-check-in-alerts';
 import { sanitizeUserContent, validateIdentifier } from '../utils/sanitize';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Types of care responsibilities that can be scheduled
@@ -737,7 +738,7 @@ export async function addCareResponsibility(
   }
 
   const respData: CareResponsibility = {
-    id: `resp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `resp-${uuidv4()}`,
     careCircleId,
     type: responsibility.type,
     description: responsibility.description,
@@ -818,7 +819,7 @@ export async function addCareNeed(
   }
 
   const needData: CareNeed = {
-    id: `need-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `need-${uuidv4()}`,
     careCircleId,
     type: need.type,
     description: need.description,

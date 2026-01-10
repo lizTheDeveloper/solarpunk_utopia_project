@@ -5,13 +5,14 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { LocalDatabase } from './database';
 import type { Resource } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 describe('LocalDatabase', () => {
   let db: LocalDatabase;
 
   beforeEach(async () => {
     // Use unique database name for each test
-    db = new LocalDatabase(`test-db-${Date.now()}-${Math.random()}`);
+    db = new LocalDatabase(`test-db-${uuidv4()}`);
     await db.init();
   });
 

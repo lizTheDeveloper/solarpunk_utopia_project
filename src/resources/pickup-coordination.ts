@@ -16,6 +16,7 @@
 import { db } from '../core/database';
 import type { Resource, EconomicEvent, UserProfile } from '../types';
 import { sanitizeUserContent, requireValidIdentifier, validateIdentifier } from '../utils/sanitize';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Pickup coordination status
@@ -242,11 +243,14 @@ export async function addPickupMessage(
     timestamp: Date.now(),
   };
 
-  // Add message to coordination
-  const updatedMessages = [...coordination.messages, newMessage];
-
-  await db.updatePickupCoordination(coordinationId, {
-    messages: updatedMessages,
+  // Add message using direct database method for Automerge-safe array operations
+  await db.update((doc) => {
+    const coord = doc.pickupCoordinations[coordinationId];
+    if (coord) {
+      // Push to existing array (Automerge-safe)
+      coord.messages.push(newMessage);
+      coord.updatedAt = Date.now();
+    }
   });
 
   const updated = db.getPickupCoordination(coordinationId);
@@ -390,10 +394,27 @@ export async function completePickupCoordination(
 
   const now = Date.now();
 
-  await db.updatePickupCoordination(coordinationId, {
-    status: 'completed',
-    completedAt: now,
-    completedBy: userId,
+  // Update status and add completion message in one operation
+  await db.update((doc) => {
+    const coord = doc.pickupCoordinations[coordinationId];
+    if (coord) {
+      coord.status = 'completed';
+      coord.completedAt = now;
+      coord.completedBy = userId;
+
+      // Add completion message if provided
+      if (confirmationNote) {
+        const message = {
+          id: generateMessageId(),
+          senderId: userId,
+          content: sanitizeUserContent(`✓ Pickup completed: ${confirmationNote}`),
+          timestamp: now,
+        };
+        coord.messages.push(message);
+      }
+
+      coord.updatedAt = now;
+    }
   });
 
   // Record completion event
@@ -410,11 +431,6 @@ export async function completePickupCoordination(
       resourceId: coordination.resourceId,
       note,
     });
-  }
-
-  // Add completion message if note provided
-  if (confirmationNote) {
-    await addPickupMessage(coordinationId, userId, `✓ Pickup completed: ${confirmationNote}`);
   }
 }
 
@@ -443,14 +459,28 @@ export async function cancelPickupCoordination(
     throw new Error(`Coordination is already ${coordination.status}`);
   }
 
-  await db.updatePickupCoordination(coordinationId, {
-    status: 'cancelled',
-  });
+  const now = Date.now();
 
-  // Add cancellation message
-  if (reason) {
-    await addPickupMessage(coordinationId, userId, `Cancelled: ${reason}`);
-  }
+  // Update status and add cancellation message in one operation
+  await db.update((doc) => {
+    const coord = doc.pickupCoordinations[coordinationId];
+    if (coord) {
+      coord.status = 'cancelled';
+
+      // Add cancellation message if provided
+      if (reason) {
+        const message = {
+          id: generateMessageId(),
+          senderId: userId,
+          content: sanitizeUserContent(`Cancelled: ${reason}`),
+          timestamp: now,
+        };
+        coord.messages.push(message);
+      }
+
+      coord.updatedAt = now;
+    }
+  });
 }
 
 /**
@@ -503,7 +533,7 @@ export function getCoordinationSummary(coordinationId: string): {
  * Helper function to generate unique message IDs
  */
 function generateMessageId(): string {
-  return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `msg-${uuidv4()}`;
 }
 
 /**

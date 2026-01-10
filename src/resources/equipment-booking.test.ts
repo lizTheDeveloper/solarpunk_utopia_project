@@ -99,10 +99,9 @@ describe('Equipment Booking System', () => {
       const tomorrow = Date.now() + (24 * 60 * 60 * 1000);
       const dayAfter = tomorrow + (24 * 60 * 60 * 1000);
 
-      const result = await createBooking('user-1', tool.id, tomorrow, dayAfter);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Resource owners manage their own equipment schedule');
+      await expect(
+        createBooking('user-1', tool.id, tomorrow, dayAfter)
+      ).rejects.toThrow('Resource owners manage their own equipment schedule');
     });
 
     it('should detect booking conflicts', async () => {
@@ -119,16 +118,13 @@ describe('Equipment Booking System', () => {
       // First booking
       await createBooking('user-2', tool.id, tomorrow, threeDaysFromNow);
 
-      // Try overlapping booking
+      // Try overlapping booking - should throw error
       const dayAfter = tomorrow + (24 * 60 * 60 * 1000);
       const fourDaysFromNow = threeDaysFromNow + (24 * 60 * 60 * 1000);
 
-      const result = await createBooking('user-3', tool.id, dayAfter, fourDaysFromNow);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('conflicts with existing bookings');
-      expect(result.conflicts).toBeDefined();
-      expect(result.conflicts!.length).toBeGreaterThan(0);
+      await expect(
+        createBooking('user-3', tool.id, dayAfter, fourDaysFromNow)
+      ).rejects.toThrow('conflicts with existing bookings');
     });
 
     it('should enforce max borrow days', async () => {
@@ -141,12 +137,11 @@ describe('Equipment Booking System', () => {
       });
 
       const tomorrow = Date.now() + (24 * 60 * 60 * 1000);
-      const fiveDaysFromNow = tomorrow + (4 * 24 * 60 * 60 * 1000);
+      const fourDaysLater = tomorrow + (4 * 24 * 60 * 60 * 1000); // 4 days duration, exceeds 3-day max
 
-      const result = await createBooking('user-2', tool.id, tomorrow, fiveDaysFromNow);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Maximum borrow period');
+      await expect(
+        createBooking('user-2', tool.id, tomorrow, fourDaysLater)
+      ).rejects.toThrow('Maximum borrow period');
     });
 
     it('should sanitize user input', async () => {
@@ -160,14 +155,14 @@ describe('Equipment Booking System', () => {
       const tomorrow = Date.now() + (24 * 60 * 60 * 1000);
       const dayAfter = tomorrow + (24 * 60 * 60 * 1000);
 
-      const result = await createBooking('user-2', tool.id, tomorrow, dayAfter, {
+      const booking = await createBooking('user-2', tool.id, tomorrow, dayAfter, {
         purpose: '<script>alert("xss")</script>Fix bike',
         notes: '<b>Urgent</b>',
       });
 
-      expect(result.success).toBe(true);
-      expect(result.booking?.purpose).not.toContain('<script>');
-      expect(result.booking?.notes).not.toContain('<b>');
+      expect(booking).toBeDefined();
+      expect(booking.purpose).not.toContain('<script>');
+      expect(booking.notes).not.toContain('<b>');
     });
   });
 
@@ -483,13 +478,13 @@ describe('Equipment Booking System', () => {
       const threeHoursFromNow = Date.now() + (3 * 60 * 60 * 1000);
 
       const booking = await createBooking('user-2', tool.id, twoHoursFromNow, threeHoursFromNow);
-      expect(booking.success).toBe(true);
+      expect(booking).toBeDefined();
 
       // Mark as active
-      await markBookingActive(booking.booking!.id, 'user-1');
+      await markBookingActive(booking.id, 'user-1');
 
       // Simulate time passing by manually setting the end time to the past
-      const activeBooking = getBooking(booking.booking!.id);
+      const activeBooking = getBooking(booking.id);
       if (activeBooking) {
         activeBooking.endTime = Date.now() - (60 * 60 * 1000); // 1 hour ago
       }
@@ -497,7 +492,7 @@ describe('Equipment Booking System', () => {
       const overdue = getOverdueBookings('user-2');
 
       expect(overdue.length).toBe(1);
-      expect(overdue[0].id).toBe(booking.booking!.id);
+      expect(overdue[0].id).toBe(booking.id);
     });
   });
 

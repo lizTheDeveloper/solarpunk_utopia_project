@@ -21,6 +21,7 @@
 
 import { getDatabase } from '../core/database';
 import type { CareCircle, CareCircleMember, CareNeed, CareActivity } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Create a new care circle
@@ -132,7 +133,7 @@ export async function addCareNeed(
 
   const careNeed: CareNeed = {
     ...need,
-    id: `need-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    id: `need-${uuidv4()}`,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -185,7 +186,7 @@ export async function logCareActivity(
 
   const careActivity: CareActivity = {
     ...activity,
-    id: `activity-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    id: `activity-${uuidv4()}`,
     createdAt: Date.now(),
   };
 

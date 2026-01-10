@@ -196,14 +196,14 @@ See [MODULARIZATION_PROPOSAL.md](./MODULARIZATION_PROPOSAL.md) for full details.
 
 ### Group A: Core Infrastructure Packages
 
-| Task | Complexity | Liberation | Joy | Reference |
-|------|------------|------------|-----|-----------|
-| Audit all imports/exports | Simple | ✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md |
-| Create dependency graph | Simple | ✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md |
-| Break circular dependencies | Medium | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
-| Set up NPM workspaces structure | Simple | ✊✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md |
-| Extract @solarpunk/types package | Simple | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
-| Extract @solarpunk/crypto package | Simple | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md |
+| Task | Complexity | Liberation | Joy | Reference | Status |
+|------|------------|------------|-----|-----------|--------|
+| Audit all imports/exports | Simple | ✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md | |
+| Create dependency graph | Simple | ✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md | |
+| Break circular dependencies | Medium | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md | |
+| Set up NPM workspaces structure | Simple | ✊✊✊ | 🌻 | MODULARIZATION_PROPOSAL.md | |
+| Extract @solarpunk/types package | Simple | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md | |
+| Extract @solarpunk/crypto package | Simple | ✊✊✊ | 🌻🌻 | MODULARIZATION_PROPOSAL.md | |
 
 ### Group B: Database & Identity Packages
 
@@ -825,11 +825,12 @@ Start here for immediate impact with minimal complexity:
 
 ### Group A: Security Critical (Fix Immediately)
 
-| Issue | Complexity | Liberation | Files Affected |
-|-------|------------|------------|----------------|
-| Replace XOR encryption with XChaCha20-Poly1305 | Medium | ✊✊✊✊✊ | src/crypto/keys.ts |
-| Secure private key storage at rest | Medium | ✊✊✊✊✊ | src/identity/identity-service.ts |
-| Fix hardcoded `user-1` with auth context | Simple | ✊✊✊✊ | src/main.ts, src/care/check-in.ts, src/resources/browse-needs.ts |
+| Issue | Complexity | Liberation | Files Affected | Status |
+|-------|------------|------------|----------------|--------|
+| Replace XOR encryption with XChaCha20-Poly1305 | Medium | ✊✊✊✊✊ | src/crypto/keys.ts | ✅ DONE |
+| Replace Math.random() with secure randomness | Simple | ✊✊✊✊ | Multiple files | ✅ DONE |
+| Secure private key storage at rest | Medium | ✊✊✊✊✊ | src/identity/identity-service.ts | |
+| Fix hardcoded `user-1` with auth context | Simple | ✊✊✊✊ | src/main.ts, src/care/check-in.ts, src/resources/browse-needs.ts | |
 
 ### Group B: Functionality Critical
 

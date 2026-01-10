@@ -96,10 +96,10 @@ export async function createBooking(
   }
 
   // Check tool-specific constraints (max borrow days)
-  const toolLibrary = resource.toolLibrary;
-  if (toolLibrary) {
+  const toolMetadata = resource.toolMetadata;
+  if (toolMetadata) {
     const bookingDuration = endTime - startTime;
-    const maxBorrowDays = 7; // Default max borrow period
+    const maxBorrowDays = toolMetadata.maxBorrowDays || 7; // Default max borrow period is 7 days
     const maxDuration = maxBorrowDays * 24 * 60 * 60 * 1000; // Convert days to ms
     if (bookingDuration > maxDuration) {
       throw new Error(`Maximum borrow period for this tool is ${maxBorrowDays} days`);
@@ -447,10 +447,10 @@ export async function completeBooking(
     });
 
     // Update tool condition if provided
-    if (returnCondition?.condition && resource.toolLibrary) {
+    if (returnCondition?.condition && resource.toolMetadata) {
       await db.updateResource(booking.resourceId, {
-        toolLibrary: {
-          ...resource.toolLibrary,
+        toolMetadata: {
+          ...resource.toolMetadata,
           condition: returnCondition.condition,
         },
       });

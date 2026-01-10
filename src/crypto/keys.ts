@@ -9,6 +9,8 @@ import { ed25519 } from '@noble/curves/ed25519';
 import { bytesToHex, hexToBytes, randomBytes } from '@noble/hashes/utils';
 import { sha256 } from '@noble/hashes/sha256';
 import { pbkdf2 } from '@noble/hashes/pbkdf2';
+import nacl from 'tweetnacl';
+import { encodeBase64, decodeBase64 } from 'tweetnacl-util';
 
 /**
  * Key pair for Ed25519 signatures
@@ -25,7 +27,7 @@ export interface EncryptedKey {
   ciphertext: string;
   salt: string;
   nonce: string;
-  algorithm: 'xchacha20-poly1305';
+  algorithm: 'xsalsa20-poly1305';
 }
 
 /**
@@ -99,24 +101,45 @@ export function deriveKey(passphrase: string, salt: Uint8Array): Uint8Array {
 }
 
 /**
- * Simple XOR-based encryption (temporary - will be replaced with XChaCha20-Poly1305)
+ * Encrypt data using XSalsa20-Poly1305 (authenticated encryption)
  *
- * NOTE: This is a placeholder. In production, use a proper AEAD cipher.
+ * This provides:
+ * - Confidentiality: XSalsa20 stream cipher
+ * - Authenticity: Poly1305 MAC
+ * - Protection against tampering and forgery
  *
  * @param plaintext - Data to encrypt
  * @param key - Encryption key (32 bytes)
- * @returns Encrypted data
+ * @param nonce - Nonce for encryption (24 bytes)
+ * @returns Encrypted data with authentication tag
  */
-function xorEncrypt(plaintext: Uint8Array, key: Uint8Array): Uint8Array {
-  const result = new Uint8Array(plaintext.length);
-  for (let i = 0; i < plaintext.length; i++) {
-    result[i] = plaintext[i] ^ key[i % key.length];
-  }
-  return result;
+function sealedEncrypt(plaintext: Uint8Array, key: Uint8Array, nonce: Uint8Array): Uint8Array {
+  return nacl.secretbox(plaintext, nonce, key);
+}
+
+/**
+ * Decrypt data using XSalsa20-Poly1305 (authenticated decryption)
+ *
+ * Verifies the authentication tag before decrypting.
+ * Returns null if authentication fails (wrong key, corrupted data, or tampering).
+ *
+ * @param ciphertext - Encrypted data with authentication tag
+ * @param key - Decryption key (32 bytes)
+ * @param nonce - Nonce used for encryption (24 bytes)
+ * @returns Decrypted data or null if authentication fails
+ */
+function sealedDecrypt(ciphertext: Uint8Array, key: Uint8Array, nonce: Uint8Array): Uint8Array | null {
+  return nacl.secretbox.open(ciphertext, nonce, key);
 }
 
 /**
  * Encrypt a private key with a passphrase
+ *
+ * Uses PBKDF2 for key derivation and XSalsa20-Poly1305 for authenticated encryption.
+ * This provides strong protection against:
+ * - Brute force attacks (via PBKDF2 with 100k iterations)
+ * - Tampering detection (via Poly1305 MAC)
+ * - Known-plaintext attacks (via cryptographic stream cipher)
  *
  * @param privateKey - Private key to encrypt
  * @param passphrase - Passphrase for encryption
@@ -130,35 +153,45 @@ export function encryptPrivateKey(
   const nonce = randomBytes(24);
   const key = deriveKey(passphrase, salt);
 
-  // Temporary XOR encryption - TODO: Replace with XChaCha20-Poly1305
-  const ciphertext = xorEncrypt(privateKey, key);
+  // Use XSalsa20-Poly1305 authenticated encryption
+  const ciphertext = sealedEncrypt(privateKey, key, nonce);
 
   return {
-    ciphertext: bytesToHex(ciphertext),
+    ciphertext: encodeBase64(ciphertext),
     salt: bytesToHex(salt),
-    nonce: bytesToHex(nonce),
-    algorithm: 'xchacha20-poly1305'
+    nonce: encodeBase64(nonce),
+    algorithm: 'xsalsa20-poly1305'
   };
 }
 
 /**
  * Decrypt a private key with a passphrase
  *
+ * Verifies the authentication tag before decrypting to ensure:
+ * - The passphrase is correct
+ * - The data has not been tampered with
+ * - The data has not been corrupted
+ *
  * @param encrypted - Encrypted key data
  * @param passphrase - Passphrase for decryption
  * @returns Decrypted private key
- * @throws Error if decryption fails
+ * @throws Error if decryption fails (wrong passphrase or corrupted data)
  */
 export function decryptPrivateKey(
   encrypted: EncryptedKey,
   passphrase: string
 ): Uint8Array {
   const salt = hexToBytes(encrypted.salt);
-  const ciphertext = hexToBytes(encrypted.ciphertext);
+  const ciphertext = decodeBase64(encrypted.ciphertext);
+  const nonce = decodeBase64(encrypted.nonce);
   const key = deriveKey(passphrase, salt);
 
-  // Temporary XOR decryption - TODO: Replace with XChaCha20-Poly1305
-  const privateKey = xorEncrypt(ciphertext, key);
+  // Use XSalsa20-Poly1305 authenticated decryption
+  const privateKey = sealedDecrypt(ciphertext, key, nonce);
+
+  if (!privateKey) {
+    throw new Error('Decryption failed - wrong passphrase or corrupted data');
+  }
 
   return privateKey;
 }

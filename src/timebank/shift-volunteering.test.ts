@@ -618,7 +618,10 @@ describe('Shift Volunteering', () => {
       await signUpForShift(shift.id, 'volunteer-1');
       await signUpForShift(shift.id, 'volunteer-2');
 
-      const formatted = formatShiftForDisplay(shift);
+      // Get updated shift from database after signups
+      const updatedShift = db.getVolunteerShift(shift.id);
+      expect(updatedShift).toBeDefined();
+      const formatted = formatShiftForDisplay(updatedShift!);
 
       expect(formatted).toContain('Community Garden');
       expect(formatted).toContain('2/10 volunteers');

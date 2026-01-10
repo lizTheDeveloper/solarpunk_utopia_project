@@ -7,7 +7,7 @@
 
 import * as Automerge from '@automerge/automerge';
 import { openDB, type IDBPDatabase } from 'idb';
-import type { DatabaseSchema, Resource, Need, SkillOffer, AvailabilitySlot, HelpSession, EquipmentBooking, EconomicEvent, UserProfile, Community, CommunityGroup, SyncStatus, CheckIn, CheckInStatus, CareCircle, CareActivity, MissedCheckInAlert, EmergencyAlert, BulletinPost, BulletinComment, BulletinRSVP, RSVPResponse, CommunityEvent, CommunityEventRSVP, EventRSVPStatus, CommunityEventComment, CommunityEventType, ContributionRecord, BurnoutAssessment, GratitudeExpression } from '../types';
+import type { DatabaseSchema, Resource, Need, SkillOffer, AvailabilitySlot, HelpSession, EquipmentBooking, EconomicEvent, UserProfile, Community, CommunityGroup, SyncStatus, CheckIn, CheckInStatus, CareCircle, CareActivity, MissedCheckInAlert, EmergencyAlert, BulletinPost, BulletinComment, BulletinRSVP, RSVPResponse, CommunityEvent, CommunityEventRSVP, EventRSVPStatus, CommunityEventComment, CommunityEventType, ContributionRecord, BurnoutAssessment, GratitudeExpression, VolunteerShift, RecurringShiftPattern, PickupCoordination, SkillCategory } from '../types';
 
 const DB_NAME = 'solarpunk-utopia';
 const DB_VERSION = 1;
@@ -182,6 +182,38 @@ export class LocalDatabase {
         });
         await this.save();
       }
+
+      // Migrate: Add volunteerShifts if it doesn't exist (Phase 3 Group B)
+      if (!this.doc.volunteerShifts) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.volunteerShifts = {};
+        });
+        await this.save();
+      }
+
+      // Migrate: Add recurringShiftPatterns if it doesn't exist (Phase 3 Group B)
+      if (!this.doc.recurringShiftPatterns) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.recurringShiftPatterns = {};
+        });
+        await this.save();
+      }
+
+      // Migrate: Add pickupCoordinations if it doesn't exist (Phase 3 Group B)
+      if (!this.doc.pickupCoordinations) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.pickupCoordinations = {};
+        });
+        await this.save();
+      }
+
+      // Migrate: Add skillCategories if it doesn't exist (Phase 3 Group B)
+      if (!this.doc.skillCategories) {
+        this.doc = Automerge.change(this.doc, (doc) => {
+          doc.skillCategories = {};
+        });
+        await this.save();
+      }
     } else {
       // Create new document with initial schema
       this.doc = Automerge.from<DatabaseSchema>({
@@ -213,6 +245,10 @@ export class LocalDatabase {
         randomKindness: {},
         burnoutAssessments: {},
         participationVitality: {},
+        volunteerShifts: {},
+        recurringShiftPatterns: {},
+        pickupCoordinations: {},
+        skillCategories: {},
       });
       await this.save();
     }
@@ -1395,6 +1431,242 @@ export class LocalDatabase {
     return Object.values(this.getDoc().gratitude || {});
   }
 
+  // ===== Volunteer Shift Operations =====
+  // REQ-TIME-017: Group Coordination
+  // REQ-TIME-005: Collective Time Projects
+
+  /**
+   * Add a volunteer shift
+   */
+  async addVolunteerShift(shift: Omit<VolunteerShift, 'id' | 'createdAt' | 'updatedAt'>): Promise<VolunteerShift> {
+    const newShift: VolunteerShift = {
+      ...shift,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    await this.update((doc) => {
+      doc.volunteerShifts[newShift.id] = newShift;
+    });
+
+    return newShift;
+  }
+
+  /**
+   * Update a volunteer shift
+   */
+  async updateVolunteerShift(id: string, updates: Partial<Omit<VolunteerShift, 'id' | 'createdAt'>>): Promise<void> {
+    await this.update((doc) => {
+      const shift = doc.volunteerShifts[id];
+      if (shift) {
+        Object.assign(shift, updates, { updatedAt: Date.now() });
+      }
+    });
+  }
+
+  /**
+   * Get a volunteer shift by ID
+   */
+  getVolunteerShift(id: string): VolunteerShift | undefined {
+    return this.getDoc().volunteerShifts[id];
+  }
+
+  /**
+   * List all volunteer shifts
+   */
+  listVolunteerShifts(): VolunteerShift[] {
+    return Object.values(this.getDoc().volunteerShifts || {});
+  }
+
+  /**
+   * Get open volunteer shifts
+   */
+  getOpenVolunteerShifts(): VolunteerShift[] {
+    return this.listVolunteerShifts()
+      .filter(shift => shift.status === 'open' || shift.status === 'filled')
+      .sort((a, b) => a.shiftDate - b.shiftDate);
+  }
+
+  /**
+   * Get volunteer shifts by volunteer
+   */
+  getVolunteerShiftsByVolunteer(volunteerId: string): VolunteerShift[] {
+    return this.listVolunteerShifts()
+      .filter(shift => shift.volunteersSignedUp.includes(volunteerId))
+      .sort((a, b) => a.shiftDate - b.shiftDate);
+  }
+
+  /**
+   * Get volunteer shifts by organizer
+   */
+  getVolunteerShiftsByOrganizer(organizerId: string): VolunteerShift[] {
+    return this.listVolunteerShifts()
+      .filter(shift => shift.organizerId === organizerId)
+      .sort((a, b) => a.shiftDate - b.shiftDate);
+  }
+
+  /**
+   * Get upcoming volunteer shifts
+   */
+  getUpcomingVolunteerShifts(userId?: string): VolunteerShift[] {
+    const now = Date.now();
+    const shifts = this.listVolunteerShifts()
+      .filter(shift => shift.shiftDate >= now && shift.status !== 'cancelled');
+
+    if (userId) {
+      return shifts.filter(shift =>
+        shift.volunteersSignedUp.includes(userId) || shift.organizerId === userId
+      ).sort((a, b) => a.shiftDate - b.shiftDate);
+    }
+
+    return shifts.sort((a, b) => a.shiftDate - b.shiftDate);
+  }
+
+  /**
+   * Get volunteer shifts by category
+   */
+  getVolunteerShiftsByCategory(category: string): VolunteerShift[] {
+    return this.listVolunteerShifts()
+      .filter(shift => shift.category === category)
+      .sort((a, b) => a.shiftDate - b.shiftDate);
+  }
+
+  // ===== Recurring Shift Pattern Operations =====
+
+  /**
+   * Add a recurring shift pattern
+   */
+  async addRecurringShiftPattern(pattern: Omit<RecurringShiftPattern, 'id' | 'createdAt' | 'updatedAt'>): Promise<RecurringShiftPattern> {
+    const newPattern: RecurringShiftPattern = {
+      ...pattern,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    await this.update((doc) => {
+      doc.recurringShiftPatterns[newPattern.id] = newPattern;
+    });
+
+    return newPattern;
+  }
+
+  /**
+   * Update a recurring shift pattern
+   */
+  async updateRecurringShiftPattern(id: string, updates: Partial<Omit<RecurringShiftPattern, 'id' | 'createdAt'>>): Promise<void> {
+    await this.update((doc) => {
+      const pattern = doc.recurringShiftPatterns[id];
+      if (pattern) {
+        Object.assign(pattern, updates, { updatedAt: Date.now() });
+      }
+    });
+  }
+
+  /**
+   * Get a recurring shift pattern by ID
+   */
+  getRecurringShiftPattern(id: string): RecurringShiftPattern | undefined {
+    return this.getDoc().recurringShiftPatterns[id];
+  }
+
+  /**
+   * Get active recurring shift patterns
+   */
+  getActiveRecurringShiftPatterns(): RecurringShiftPattern[] {
+    return Object.values(this.getDoc().recurringShiftPatterns || {})
+      .filter(pattern => pattern.active)
+      .sort((a, b) => a.createdAt - b.createdAt);
+  }
+
+  // ===== Pickup Coordination Operations =====
+  // REQ-SHARE-013: Resource Pickup and Delivery
+
+  /**
+   * Add a pickup coordination
+   */
+  async addPickupCoordination(coordination: Omit<PickupCoordination, 'id' | 'createdAt' | 'updatedAt'>): Promise<PickupCoordination> {
+    const newCoordination: PickupCoordination = {
+      ...coordination,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    await this.update((doc) => {
+      doc.pickupCoordinations[newCoordination.id] = newCoordination;
+    });
+
+    return newCoordination;
+  }
+
+  /**
+   * Update a pickup coordination
+   */
+  async updatePickupCoordination(id: string, updates: Partial<Omit<PickupCoordination, 'id' | 'createdAt'>>): Promise<void> {
+    await this.update((doc) => {
+      const coordination = doc.pickupCoordinations[id];
+      if (coordination) {
+        Object.assign(coordination, updates, { updatedAt: Date.now() });
+      }
+    });
+  }
+
+  /**
+   * Get a pickup coordination by ID
+   */
+  getPickupCoordination(id: string): PickupCoordination | undefined {
+    return this.getDoc().pickupCoordinations[id];
+  }
+
+  /**
+   * List all pickup coordinations
+   */
+  listPickupCoordinations(): PickupCoordination[] {
+    return Object.values(this.getDoc().pickupCoordinations || {});
+  }
+
+  // ===== Skill Category Operations =====
+  // REQ-TIME-009: Skill Taxonomy
+
+  /**
+   * Add a skill category
+   */
+  async addSkillCategory(category: Omit<SkillCategory, 'id' | 'createdAt' | 'updatedAt'>): Promise<SkillCategory> {
+    const newCategory: SkillCategory = {
+      ...category,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    await this.update((doc) => {
+      doc.skillCategories[newCategory.id] = newCategory;
+    });
+
+    return newCategory;
+  }
+
+  /**
+   * Update a skill category
+   */
+  async updateSkillCategory(id: string, updates: Partial<Omit<SkillCategory, 'id' | 'createdAt'>>): Promise<void> {
+    await this.update((doc) => {
+      const category = doc.skillCategories[id];
+      if (category) {
+        Object.assign(category, updates, { updatedAt: Date.now() });
+      }
+    });
+  }
+
+  /**
+   * List all skill categories
+   */
+  listSkillCategories(): SkillCategory[] {
+    return Object.values(this.getDoc().skillCategories || {});
+  }
+
   // ===== Sync Operations =====
 
   /**
@@ -1476,10 +1748,15 @@ export class LocalDatabase {
       emergencyAlerts: {},
       bulletinPosts: {},
       communityEvents: {},
+      communityGroups: {},
       gratitude: {},
       randomKindness: {},
       burnoutAssessments: {},
       participationVitality: {},
+      volunteerShifts: {},
+      recurringShiftPatterns: {},
+      pickupCoordinations: {},
+      skillCategories: {},
     });
     await this.save();
 

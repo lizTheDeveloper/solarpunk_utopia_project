@@ -152,8 +152,10 @@ export class MeshtasticAdapter implements NetworkAdapter {
     // This would use Meshtastic protocol buffers in a real implementation
     console.log('Requesting node info from Meshtastic device...');
 
-    // For now, assign a random node ID
-    this.nodeId = Math.floor(Math.random() * 0xFFFFFF);
+    // For now, assign a cryptographically secure random node ID
+    const randomBytes = new Uint8Array(3);
+    crypto.getRandomValues(randomBytes);
+    this.nodeId = (randomBytes[0] << 16) | (randomBytes[1] << 8) | randomBytes[2];
   }
 
   /**
