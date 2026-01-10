@@ -390,6 +390,7 @@ export interface DatabaseSchema {
   pickupCoordinations: Record<string, PickupCoordination>;
   volunteerShifts: Record<string, VolunteerShift>;
   recurringShiftPatterns: Record<string, RecurringShiftPattern>;
+  shiftSwapRequests: Record<string, ShiftSwapRequest>;
   skillCategories: Record<string, SkillCategory>;
 }
 
@@ -992,6 +993,43 @@ export interface RecurringShiftPattern {
   preparationNotes?: string;
   accessibilityInfo?: string;
   skillsNeeded?: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * Shift Swap Request - Phase 3, Group B
+ * REQ-GOV-019B: Shift Swapping and Coverage
+ *
+ * Enables members to swap shifts or find coverage when conflicts arise
+ */
+export type ShiftSwapStatus = 'pending' | 'accepted' | 'declined' | 'cancelled' | 'completed';
+
+export interface ShiftSwapRequest {
+  id: string;
+  shiftId: string;
+  requesterId: string;
+  status: ShiftSwapStatus;
+  reason?: string;
+
+  // Direct swap proposal (swap with specific person)
+  proposedToUserId?: string;
+  proposedShiftId?: string; // The shift the other person would give up
+
+  // General coverage request (posted for anyone to claim)
+  isOpenRequest: boolean;
+
+  // Who accepted the swap/coverage
+  acceptedByUserId?: string;
+  acceptedAt?: number;
+
+  // Declined tracking
+  declinedByUserIds: string[];
+
+  // Resolution
+  completedAt?: number;
+  cancelledAt?: number;
+
   createdAt: number;
   updatedAt: number;
 }

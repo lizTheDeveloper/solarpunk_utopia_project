@@ -7,7 +7,7 @@
 
 import * as Automerge from '@automerge/automerge';
 import { openDB, type IDBPDatabase } from 'idb';
-import type { DatabaseSchema, Resource, Need, SkillOffer, AvailabilitySlot, HelpSession, EquipmentBooking, EconomicEvent, UserProfile, Community, CommunityGroup, SyncStatus, CheckIn, CheckInStatus, CareCircle, CareActivity, MissedCheckInAlert, EmergencyAlert, BulletinPost, BulletinComment, BulletinRSVP, RSVPResponse, CommunityEvent, CommunityEventRSVP, EventRSVPStatus, CommunityEventComment, CommunityEventType, ContributionRecord, BurnoutAssessment, GratitudeExpression, VolunteerShift, RecurringShiftPattern, PickupCoordination, SkillCategory } from '../types';
+import type { DatabaseSchema, Resource, Need, SkillOffer, AvailabilitySlot, HelpSession, EquipmentBooking, EconomicEvent, UserProfile, Community, CommunityGroup, SyncStatus, CheckIn, CheckInStatus, CareCircle, CareActivity, MissedCheckInAlert, EmergencyAlert, BulletinPost, BulletinComment, BulletinRSVP, RSVPResponse, CommunityEvent, CommunityEventRSVP, EventRSVPStatus, CommunityEventComment, CommunityEventType, ContributionRecord, BurnoutAssessment, GratitudeExpression, VolunteerShift, RecurringShiftPattern, ShiftSwapRequest, PickupCoordination, SkillCategory } from '../types';
 
 const DB_NAME = 'solarpunk-utopia';
 const DB_VERSION = 1;
@@ -247,6 +247,7 @@ export class LocalDatabase {
         participationVitality: {},
         volunteerShifts: {},
         recurringShiftPatterns: {},
+        shiftSwapRequests: {},
         pickupCoordinations: {},
         skillCategories: {},
       });
@@ -587,6 +588,24 @@ export class LocalDatabase {
   }
 
   // ===== User Operations =====
+
+  /**
+   * Add a new user profile
+   */
+  async addUserProfile(profile: Omit<UserProfile, 'id' | 'createdAt' | 'lastModified'>): Promise<UserProfile> {
+    const newProfile: UserProfile = {
+      ...profile,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      lastModified: Date.now(),
+    };
+
+    await this.update((doc) => {
+      doc.users[newProfile.id] = newProfile;
+    });
+
+    return newProfile;
+  }
 
   async setUserProfile(profile: UserProfile): Promise<void> {
     await this.update((doc) => {
@@ -1580,6 +1599,86 @@ export class LocalDatabase {
       .sort((a, b) => a.createdAt - b.createdAt);
   }
 
+  // ===== Shift Swap Request Operations =====
+  // REQ-GOV-019B: Shift Swapping and Coverage
+
+  /**
+   * Add a shift swap request
+   */
+  async addShiftSwapRequest(request: Omit<ShiftSwapRequest, 'id' | 'createdAt' | 'updatedAt'>): Promise<ShiftSwapRequest> {
+    const newRequest: ShiftSwapRequest = {
+      ...request,
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    await this.update((doc) => {
+      doc.shiftSwapRequests[newRequest.id] = newRequest;
+    });
+
+    return newRequest;
+  }
+
+  /**
+   * Update a shift swap request
+   */
+  async updateShiftSwapRequest(id: string, updates: Partial<Omit<ShiftSwapRequest, 'id' | 'createdAt'>>): Promise<void> {
+    await this.update((doc) => {
+      const request = doc.shiftSwapRequests[id];
+      if (request) {
+        Object.assign(request, updates, { updatedAt: Date.now() });
+      }
+    });
+  }
+
+  /**
+   * Get a shift swap request by ID
+   */
+  getShiftSwapRequest(id: string): ShiftSwapRequest | undefined {
+    return this.getDoc().shiftSwapRequests[id];
+  }
+
+  /**
+   * List all shift swap requests
+   */
+  listShiftSwapRequests(): ShiftSwapRequest[] {
+    return Object.values(this.getDoc().shiftSwapRequests || {})
+      .sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  /**
+   * Get pending shift swap requests for a shift
+   */
+  getPendingSwapRequestsForShift(shiftId: string): ShiftSwapRequest[] {
+    return this.listShiftSwapRequests()
+      .filter(req => req.shiftId === shiftId && req.status === 'pending');
+  }
+
+  /**
+   * Get open swap requests (available for anyone to claim)
+   */
+  getOpenSwapRequests(): ShiftSwapRequest[] {
+    return this.listShiftSwapRequests()
+      .filter(req => req.isOpenRequest && req.status === 'pending');
+  }
+
+  /**
+   * Get swap requests for a specific user (requested by them)
+   */
+  getSwapRequestsByUser(userId: string): ShiftSwapRequest[] {
+    return this.listShiftSwapRequests()
+      .filter(req => req.requesterId === userId);
+  }
+
+  /**
+   * Get swap requests proposed to a specific user
+   */
+  getSwapRequestsProposedToUser(userId: string): ShiftSwapRequest[] {
+    return this.listShiftSwapRequests()
+      .filter(req => req.proposedToUserId === userId && req.status === 'pending');
+  }
+
   // ===== Pickup Coordination Operations =====
   // REQ-SHARE-013: Resource Pickup and Delivery
 
@@ -1755,6 +1854,7 @@ export class LocalDatabase {
       participationVitality: {},
       volunteerShifts: {},
       recurringShiftPatterns: {},
+      shiftSwapRequests: {},
       pickupCoordinations: {},
       skillCategories: {},
     });

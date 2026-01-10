@@ -14,7 +14,7 @@
  */
 
 import { db } from '../core/database';
-import type { VolunteerShift, RecurringShiftPattern, ShiftStatus, TimeRange, RecurrencePattern } from '../types';
+import type { VolunteerShift, RecurringShiftPattern, ShiftStatus, TimeRange, RecurrencePattern, ShiftRole } from '../types';
 import { sanitizeUserContent, requireValidIdentifier, validateIdentifier } from '../utils/sanitize';
 
 /**
@@ -142,15 +142,13 @@ export async function createVolunteerShift(options: CreateVolunteerShiftOptions)
 
   // Sanitize roles if provided (avoiding undefined for Automerge)
   const sanitizedRoles = options.roles?.map(role => {
-    const sanitizedRole: any = {
+    const sanitizedRole: ShiftRole = {
       name: sanitizeUserContent(role.name.trim()),
       volunteersNeeded: role.volunteersNeeded,
       volunteersAssigned: [],
+      // Only add description if it exists (Automerge doesn't allow undefined)
+      ...(role.description && { description: sanitizeUserContent(role.description.trim()) }),
     };
-    // Only add description if it exists (Automerge doesn't allow undefined)
-    if (role.description) {
-      sanitizedRole.description = sanitizeUserContent(role.description.trim());
-    }
     return sanitizedRole;
   });
 

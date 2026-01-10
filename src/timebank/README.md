@@ -436,6 +436,128 @@ Get upcoming shifts (optionally filtered by user).
 - ✅ **Impact celebration** - Celebrate what we built together
 - ✅ **Collective action** - Many hands make light work!
 
+## Appreciation Notes (NEW!)
+
+Express gratitude and appreciation after time bank activities.
+
+**REQ-TIME-018: Experience Sharing**
+**REQ-TIME-022: Recognition Without Hierarchy**
+
+### Features
+
+#### Express Appreciation After Help Sessions
+
+Both volunteers and recipients can write appreciation notes after completing a help session:
+
+```typescript
+import { expressAppreciation } from './timebank';
+
+// Recipient thanks volunteer
+await expressAppreciation({
+  sessionId: 'session-123',
+  fromUserId: 'recipient-id',
+  message: 'Thank you for the patient tutoring! I finally understand quadratic equations.',
+  isPublic: true,
+  tags: ['patient', 'clear-explanation']
+});
+
+// Volunteer can also express appreciation
+await expressAppreciation({
+  sessionId: 'session-123',
+  fromUserId: 'volunteer-id',
+  message: 'It was a joy teaching someone so engaged!',
+  isPublic: true,
+  tags: ['engaged', 'thoughtful']
+});
+```
+
+#### Appreciate Skill Offers
+
+Thank someone for offering their time, even before a session:
+
+```typescript
+import { expressAppreciationForSkillOffer } from './timebank';
+
+await expressAppreciationForSkillOffer(
+  'skill-offer-id',
+  'user-id',
+  'Thank you for offering tutoring! Having this available means so much.',
+  {
+    isPublic: true,
+    tags: ['generous', 'community-spirit']
+  }
+);
+```
+
+#### View Appreciation
+
+```typescript
+import {
+  getAppreciationForSession,
+  getAppreciationForUser,
+  getRecentAppreciation,
+  formatAppreciationList
+} from './timebank';
+
+// Get appreciation for a specific session
+const sessionNotes = getAppreciationForSession('session-id');
+
+// Get appreciation for a user
+const userNotes = getAppreciationForUser('user-id', {
+  limit: 10,
+  includePrivate: false
+});
+
+// Get recent community appreciation
+const recent = getRecentAppreciation({
+  days: 7,
+  limit: 20,
+  publicOnly: true
+});
+
+// Format for display
+console.log(formatAppreciationList(sessionNotes, 'Session Appreciation'));
+```
+
+#### Non-Competitive Statistics
+
+```typescript
+import { getAppreciationStats, formatAppreciationStats } from './timebank';
+
+// User stats (for awareness, not ranking)
+const userStats = getAppreciationStats('user-id');
+console.log(formatAppreciationStats(userStats, 'Maria'));
+
+// Community stats
+const communityStats = getAppreciationStats();
+console.log(formatAppreciationStats(communityStats));
+```
+
+### Gift Economy Principles - Appreciation
+
+- ✅ **Gratitude, not ratings** - No scores, rankings, or evaluations
+- ✅ **Bidirectional** - Both volunteers and recipients can express appreciation
+- ✅ **Optional & joyful** - Never mandatory or coercive
+- ✅ **Connection-focused** - Builds relationships, not transactions
+- ✅ **Privacy-controlled** - Users choose public or private
+- ✅ **Offline-first** - Works without internet connection
+
+### Documentation
+
+See `APPRECIATION_NOTES.md` for comprehensive documentation including:
+- API reference
+- Usage examples
+- Privacy controls
+- Integration with other features
+- Philosophy and anti-patterns
+
+See `appreciation-notes-example.ts` for detailed examples including:
+- Expressing appreciation after help sessions
+- Appreciating skill offers
+- Viewing and filtering notes
+- Statistics and analytics
+- Private vs public notes
+
 ## Security Features
 
 - **Input Sanitization**: All user content is sanitized to prevent XSS attacks
@@ -502,7 +624,8 @@ Skills are stored in the local Automerge CRDT database, which means:
 - ✅ **Browse available skills** (REQ-TIME-004)
 - ✅ **Request help** (REQ-TIME-006, REQ-TIME-008)
 - ✅ **Schedule help sessions** (REQ-TIME-016)
-- ✅ **Gratitude wall** (REQ-TIME-022, REQ-TIME-018)
+- ✅ **Skills categories** (REQ-TIME-009)
+- ✅ **Thank you / appreciation notes** (REQ-TIME-018, REQ-TIME-022)
 
 ### ✅ Group B: Scheduling & Coverage (In Progress)
 

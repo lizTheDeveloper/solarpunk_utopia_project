@@ -157,3 +157,23 @@ export type {
   VitalityAnalysisOptions,
   VitalityInsights,
 } from './contribution-tracking';
+
+// Appreciation Notes (REQ-TIME-018, REQ-TIME-022)
+export {
+  expressAppreciation,
+  expressAppreciationForSkillOffer,
+  getAppreciationForSession,
+  getAppreciationForUser,
+  getAppreciationForSkillOffer,
+  getRecentAppreciation,
+  getAppreciationStats,
+  formatAppreciationNote,
+  formatAppreciationList,
+  formatAppreciationStats,
+} from './appreciation-notes';
+
+export type {
+  ExpressAppreciationOptions,
+  QueryAppreciationOptions,
+  AppreciationNote,
+} from './appreciation-notes';

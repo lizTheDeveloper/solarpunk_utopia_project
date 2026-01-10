@@ -151,7 +151,7 @@ For each feature: *"Does this increase community autonomy, or create new depende
 | Skills categories | Simple | ✊✊ | 🌻🌻 | time-bank.md | ✅ DONE |
 | Thank you / appreciation notes | Simple | ✊✊ | 🌻🌻🌻🌻🌻 | time-bank.md | ✅ DONE |
 
-### Group B: Scheduling & Coverage
+### Group B: Scheduling & Coverage - 100% Complete
 
 | Feature | Complexity | Liberation | Joy | Spec Reference | Status |
 |---------|------------|------------|-----|----------------|--------|
@@ -159,7 +159,7 @@ For each feature: *"Does this increase community autonomy, or create new depende
 | Schedule help sessions | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Shift volunteering | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 | Shift swapping | Medium | ✊✊✊ | 🌻🌻🌻🌻 | time-bank.md | ✅ DONE |
-| Coverage finding | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md |
+| Coverage finding | Medium | ✊✊✊ | 🌻🌻🌻 | time-bank.md | ✅ DONE |
 
 ### Group C: Tool Library & Equipment - 100% Complete
 
