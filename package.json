@@ -13,9 +13,9 @@
   },
   "dependencies": {
     "@automerge/automerge": "^3.2.1",
-    "@automerge/automerge-repo": "^1.2.1",
-    "@automerge/automerge-repo-network-broadcastchannel": "^1.2.1",
-    "@automerge/automerge-repo-storage-indexeddb": "^1.2.1",
+    "@automerge/automerge-repo": "^2.5.1",
+    "@automerge/automerge-repo-network-broadcastchannel": "^2.5.1",
+    "@automerge/automerge-repo-storage-indexeddb": "^2.5.1",
     "@fission-ai/openspec": "^0.18.0",
     "@noble/curves": "^2.0.1",
     "@noble/ed25519": "^3.0.0",
